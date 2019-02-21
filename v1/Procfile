@@ -1,1 +1,1 @@
-web: python main.py 80
+web: python main.py 8080
