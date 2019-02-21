@@ -1,1 +1,1 @@
-web: python main.py 8080
+web: gunicorn main:app
