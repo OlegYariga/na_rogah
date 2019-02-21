@@ -90,7 +90,7 @@ def get_menu(class_id):
             rezult = json.dumps(menu_list)
         except Exception:
             return jsonify({'code': 500, 'desc': "Cannot translate data in JSON"}), 500
-        return Response(rezult, mimetype = 'application/json')
+        return Response(rezult, mimetype='application/json')
 
 
 # User authorization with create session
