@@ -1,7 +1,7 @@
 from app import app
 from app import db
 import json
-from flask import request, jsonify, session, Response
+from flask import request, jsonify, session, Response, send_from_directory
 from models import Auth, Users
 from models import Class, Menu
 from app import *
@@ -132,3 +132,9 @@ def log_required(login, unique):
         if session[login] == unique:
             return True
     return False
+
+
+# Sends file from the directory to client
+@app.route('/photos/<image>', methods=['GET', 'POST'])
+def get_photo(image):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], image)
