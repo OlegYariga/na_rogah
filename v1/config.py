@@ -5,4 +5,3 @@ class Configuration(object):
     SESSION_TYPE = 'filesystem'
     SECRET_KEY = 'somethimngverysercret'
 	UPLOAD_FOLDER = 'https://na-rogah-api.herokuapp.com/photos'
-    # UPLOAD_FOLDER = 'C:\\Users\\Doc\\Desktop\\Zappa\\Na_Rogah\\app\\v1\\photos'
