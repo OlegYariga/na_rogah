@@ -8,6 +8,7 @@ from app import *
 from datetime import timedelta
 from flask_security import login_required
 import uuid
+import os
 
 
 @app.before_request
@@ -137,4 +138,6 @@ def log_required(login, unique):
 # Sends file from the directory to client
 @app.route('/photos/<image>', methods=['GET', 'POST'])
 def get_photo(image):
+    path = os.path.abspath("/photos")
+    return str(path)
     return send_from_directory(app.config['UPLOAD_FOLDER'], image)
