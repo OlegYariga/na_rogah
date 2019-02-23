@@ -1,14 +1,17 @@
 from app import app
 from app import db
 import json
-from flask import request, jsonify, session, Response, send_from_directory
-from models import Auth, Users
+from flask import request, jsonify, session, Response, make_response, send_from_directory
+from werkzeug import secure_filename
+from models import Auth, Users, Images
 from models import Class, Menu
 from app import *
 from datetime import timedelta
 from flask_security import login_required
 import uuid
 import os
+import io
+import base64
 
 
 @app.before_request
@@ -53,7 +56,7 @@ def get_classes():
                 return jsonify({'code': 500, 'desc': "Internal server error"}), 500
         try:
             # Jsonificate result
-            rezult = json.dumps(sst)
+            rezult = json.dumps({'categories': sst})
         except Exception:
             return jsonify({'code': 500, 'desc': "Cannot translate data in JSON"}), 500
         return Response(rezult, mimetype='application/json')
@@ -88,7 +91,7 @@ def get_menu(class_id):
                 return jsonify({'code': 500, 'desc': "Internal server error"}), 500
         try:
             # Jsonificate result
-            rezult = json.dumps(menu_list)
+            rezult = json.dumps({'menu': menu_list})
         except Exception:
             return jsonify({'code': 500, 'desc': "Cannot translate data in JSON"}), 500
         return Response(rezult, mimetype='application/json')
@@ -135,8 +138,62 @@ def log_required(login, unique):
     return False
 
 
-# Sends file from the directory to client
+# Sends file from the database to client
 @app.route('/photos/<image>', methods=['GET', 'POST'])
 def get_photo(image):
-    path = os.path.abspath("/photos")
-    return send_from_directory(app.config['UPLOAD_FOLDER'], image)
+    if request.method == 'GET':
+        try:
+            photo_base64 = Images.query.filter(Images.fullname == image).first()
+        except Exception:
+            return jsonify({'code': 500, 'desc': "Cannot read from DB"}), 500
+        if photo_base64:
+            try:
+                photo = base64.b16decode(photo_base64.image_base64)
+                response = make_response(photo)
+                response.headers['Content-Transfer-Encoding'] = 'base64'
+                response.headers['Content-Type'] = 'image'
+            except Exception:
+               return jsonify({'code': 500, 'desc': "Image was not recognized"}), 500
+            return response
+        return jsonify({'code': 203, 'desc': "Nothig discovered"}), 203
+    return jsonify({'code': 405, 'desc': "Method not allowed"}), 405
+
+
+# Admin pannel for uploading images
+# REQUIRED SECURE INSTALL!!!
+@app.route('/admin/upload', methods=['GET', 'POST'])
+def upload_image():
+    if request.method == 'POST':
+        try:
+            file = request.files['file']
+            menu_id = request.form['menu_id']
+            menu = Menu.query.filter(Menu.item_id == int(menu_id)).first()
+        except Exception:
+           return jsonify({'code': 401, 'desc': "Incorrect data"}), 401
+        if file:
+            if menu:
+                try:
+                    filename = secure_filename(file.filename)
+                    base = base64.b16encode(file.read())
+                    image = Images(str(filename), base)
+                    db.session.add(image)
+                    db.session.commit()
+                    # //
+                    menu.photo = str(app.config['PATH']+str(filename))
+                    db.session.add(menu)
+                    db.session.commit()
+
+                except Exception:
+                   return jsonify({'code': 405, 'desc': "Method not allowed"}), 405
+                return ('OK')
+            return jsonify({'code': 203, 'desc': "No such item detected"}), 203
+    return Response('''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="" method=post enctype=multipart/form-data>
+      <p><input type=number name=menu_id>
+         <input type=file name=file>
+         <input type=submit value=Upload>
+    </form>
+    ''')

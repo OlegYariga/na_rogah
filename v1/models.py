@@ -48,3 +48,14 @@ class Menu(db.Model):
     desc_long = db.Column(db.Text)
     weight = db.Column(db.Integer)
     recommended = db.Column(db.String(64))
+
+
+# Class stores photos
+class Images(db.Model):
+    image_id = db.Column(db.BigInteger, primary_key=True)
+    fullname = db.Column(db.String(256))
+    image_base64 = db.Column(db.LargeBinary)
+
+    def __init__(self, fullname, image_binary):
+        self.fullname = fullname
+        self.image_base64 = image_binary
