@@ -67,10 +67,19 @@ class LastUpdate(db.Model):
     log_date_time = db.Column(db.DateTime)
 
     def update_db(self):
-        self.log_id = self.log_id
-        self.log_date_time = datetime.now()
-        db.session.add(self)
-        db.session.commit()
+        last_date = self.query.first()
+        if last_date:
+            last_date.log_date_time = datetime.now()
+            db.session.add(last_date)
+            db.session.commit()
+        else:
+            self.log_date_time = datetime.now()
+            db.session.add(self)
+            db.session.commit()
 
     def check_update(self):
-        return str(self.log_date_time)
+        last_date = self.query.first()
+        if last_date:
+            return str(last_date.log_date_time)
+        else:
+            return str("")
