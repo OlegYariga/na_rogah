@@ -59,3 +59,18 @@ class Images(db.Model):
     def __init__(self, fullname, image_binary):
         self.fullname = fullname
         self.image_base64 = image_binary
+
+
+# Class for store DateTime
+class LastUpdate(db.Model):
+    log_id = db.Column(db.BigInteger, primary_key=True)
+    log_date_time = db.Column(db.DateTime)
+
+    def update_db(self):
+        self.log_id = self.log_id
+        self.log_date_time = datetime.now()
+        db.session.add(self)
+        db.session.commit()
+
+    def check_update(self):
+        return str(self.log_date_time)

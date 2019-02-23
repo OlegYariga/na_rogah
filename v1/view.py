@@ -3,8 +3,9 @@ from app import db
 import json
 from flask import request, jsonify, session, Response, make_response, send_from_directory
 from werkzeug import secure_filename
-from models import Auth, Users, Images
-from models import Class, Menu
+from models import Auth, Users
+from models import LastUpdate
+from models import Class, Menu, Images
 from app import *
 from datetime import timedelta
 from flask_security import login_required
@@ -36,7 +37,7 @@ def get_classes():
     if request.method == 'GET':
         try:
             # Selest categories from DB
-            food_class = Class.query.all()
+            food_class = Class.query.order_by(Class.class_id).all()
         except Exception:
             return jsonify({'code': 500, 'desc': "Internal server error"}), 500
         class_item = {}
@@ -68,7 +69,7 @@ def get_menu(class_id):
     if request.method == 'GET':
         try:
             # Selest categories from DB
-            menu = Menu.query.filter(Menu.class_id == class_id).all()
+            menu = Menu.query.filter(Menu.class_id == class_id).order_by(Menu.item_id).all()
         except Exception:
             return jsonify({'code': 500, 'desc': "Internal server error"}), 500
         menu_item = {}
@@ -77,6 +78,7 @@ def get_menu(class_id):
             try:
                 # Append dict by new values
                 menu_item["item_id"] = items.item_id
+                menu_item["class_id"] = items.class_id
                 menu_item["name"] = items.name
                 menu_item["price"] = items.price
                 menu_item["photo"] = items.photo
@@ -130,7 +132,7 @@ def hi():
     return 'f'
 
 
-# Checks corect session data
+# Checks correct session data
 def log_required(login, unique):
     if login in session:
         if session[login] == unique:
@@ -182,7 +184,7 @@ def upload_image():
                     menu.photo = str(app.config['PATH']+str(filename))
                     db.session.add(menu)
                     db.session.commit()
-
+                    update = LastUpdate().update_db()
                 except Exception:
                    return jsonify({'code': 405, 'desc': "Method not allowed"}), 405
                 return ('OK')
@@ -197,3 +199,10 @@ def upload_image():
          <input type=submit value=Upload>
     </form>
     ''')
+
+
+# Sends to a cliet last db update (date and time)
+@app.route('/check_update', methods=['GET'])
+def check_update():
+    update = LastUpdate().check_update()
+    return update
