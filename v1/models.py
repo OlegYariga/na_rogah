@@ -1,7 +1,12 @@
 from app import db
+from app import *
 from datetime import datetime
-from flask import jsonify
+from flask import jsonify, make_response
 import json
+import base64
+from flask import request, jsonify, session, Response, make_response, send_from_directory
+import uuid
+from werkzeug import secure_filename
 
 
 # Class Auth stores user login and password
@@ -36,6 +41,15 @@ class Class(db.Model):
     def __init__(self, *args, **kwargs):
         super(Class, self).__init__(*args, **kwargs)
 
+    def prepare_json(self):
+        return {
+            'class_id': self.class_id,
+            'name': self.name
+        }
+
+    def __repr__(self):
+        return self.name
+
 
 # Class Menu stores info about menu items
 class Menu(db.Model):
@@ -48,15 +62,73 @@ class Menu(db.Model):
     desc_long = db.Column(db.Text)
     weight = db.Column(db.Integer)
     recommended = db.Column(db.String(64))
+    image = db.relationship('Images', backref='menu', uselist=False)
+
+    def prepare_json(self):
+        return {
+            'item_id': self.item_id,
+            'class_id': self.class_id,
+            'name': self.name,
+            'price': self.price,
+            'photo': self.photo,
+            'desc_short': self.desc_short,
+            'desc_long': self.desc_long,
+            'weight': self.weight,
+            'recommended': self.recommended
+        }
+
+    def load_image(self):
+        try:
+            file = request.files['file']
+            if file:
+                # Generate unique sequence with 7 signs (garbage)
+                uuidstr = str(uuid.uuid4())[1:8]
+                # Check filename and add garbage
+                filename = uuidstr + secure_filename(file.filename)
+                # Translate photo in base64 object
+                base = base64.b16encode(file.read())
+                # Call constructor Images with filename and base64 object
+                image = Images(self.item_id, str(filename), base)
+                # Add data to DB
+                db.session.add(image)
+                db.session.commit()
+                # Update field menu_photo in Menu table with new PATH to pho
+                # Change last update date
+                update = LastUpdate().update_db()
+                # Update field menu_photo in Menu table with new PATH to photo
+                self.photo = str(app.config['PATH']+str(filename))
+        except Exception:
+            return 'NOT OK'
+        return 'OK'
+
+    def delete_image(self):
+        try:
+            # Select images from DB where image.item_id == Menu.item_id
+            images = Images.query.filter(self.item_id == Images.item_id).delete()
+            """
+            # Delete all images with item_id
+            for image in images:
+                db.session.delete(image)
+            # Commit changes
+            db.session.commit()
+            return 'OK'
+            """
+        except Exception:
+            return 'NOT OK'
+
+    def __repr__(self):
+        return self.name
 
 
 # Class stores photos
 class Images(db.Model):
     image_id = db.Column(db.BigInteger, primary_key=True)
+    item_id = db.Column(db.BigInteger, db.ForeignKey('menu.item_id'))
     fullname = db.Column(db.String(256))
     image_base64 = db.Column(db.LargeBinary)
 
-    def __init__(self, fullname, image_binary):
+    def __init__(self, item_id, fullname, image_binary):
+        self.item_id = item_id
         self.fullname = fullname
         self.image_base64 = image_binary
 

@@ -31,33 +31,28 @@ def get_test():
     return result
 
 
-# Returns all dish categories
+# Returns all dish categories (in array, for ANDROID
 @app.route('/get_classes', methods=['GET'])
 def get_classes():
     if request.method == 'GET':
         try:
-            # Selest categories from DB
+            # Select categories from DB
             food_class = Class.query.order_by(Class.class_id).all()
         except Exception:
             return jsonify({'code': 500, 'desc': "Internal server error"}), 500
-        class_item = {}
-        sst = []
+        food_set = []
         # If categories wasn't detected
         if not food_class:
             return jsonify({'code': 204, 'desc': "No categories"}), 204
         for food_item in food_class:
             try:
-                # Append dict by new values
-                class_item["class_id"] = food_item.class_id
-                class_item["name"] = food_item.name
-                # Append list by class_item and delete class_item
-                sst.append(class_item)
-                class_item = {}
+                # Append list by food_item (json)
+                food_set.append(food_item.prepare_json())
             except Exception:
                 return jsonify({'code': 500, 'desc': "Internal server error"}), 500
         try:
             # Jsonificate result
-            rezult = json.dumps({'categories': sst})
+            rezult = json.dumps({'categories': food_set})
         except Exception:
             return jsonify({'code': 500, 'desc': "Cannot translate data in JSON"}), 500
         return Response(rezult, mimetype='application/json')
@@ -68,27 +63,15 @@ def get_classes():
 def get_menu(class_id):
     if request.method == 'GET':
         try:
-            # Selest categories from DB
+            # Select menu from DB
             menu = Menu.query.filter(Menu.class_id == class_id).order_by(Menu.item_id).all()
         except Exception:
             return jsonify({'code': 500, 'desc': "Internal server error"}), 500
-        menu_item = {}
         menu_list = []
         for items in menu:
             try:
-                # Append dict by new values
-                menu_item["item_id"] = items.item_id
-                menu_item["class_id"] = items.class_id
-                menu_item["name"] = items.name
-                menu_item["price"] = items.price
-                menu_item["photo"] = items.photo
-                menu_item["desc_short"] = items.desc_short
-                menu_item["desc_long"] = items.desc_long
-                menu_item["weight"] = items.weight
-                menu_item["recommended"] = items.recommended
-                # Append list by menu_item and delete menu_item
-                menu_list.append(menu_item)
-                menu_item = {}
+                # Append list by items and
+                menu_list.append(items.prepare_json())
             except Exception:
                 return jsonify({'code': 500, 'desc': "Internal server error"}), 500
         try:
@@ -124,12 +107,9 @@ def authorize():
 
 @app.route('/hi', methods=['GET', 'POST'])
 def hi():
-    data = request.data
-    jjs = json.loads(data)
-    if jjs['kk'] == 'kk':
-        return "OKAY"
 
-    return 'f'
+    uuidstr = str(uuid.uuid4())[1:8]
+    return uuidstr
 
 
 # Checks correct session data
@@ -145,17 +125,21 @@ def log_required(login, unique):
 def get_photo(image):
     if request.method == 'GET':
         try:
+            # Get first base64 object photo with name <image> from database
             photo_base64 = Images.query.filter(Images.fullname == image).first()
         except Exception:
             return jsonify({'code': 500, 'desc': "Cannot read from DB"}), 500
-        if photo_base64:
+        if photo_base64:  # if photo exists
             try:
+                # Translate base64 object to photo
                 photo = base64.b16decode(photo_base64.image_base64)
+                # Make response and set headers
                 response = make_response(photo)
                 response.headers['Content-Transfer-Encoding'] = 'base64'
                 response.headers['Content-Type'] = 'image'
             except Exception:
                return jsonify({'code': 500, 'desc': "Image was not recognized"}), 500
+            # If okey, send photo to client
             return response
         return jsonify({'code': 203, 'desc': "Nothig discovered"}), 203
     return jsonify({'code': 405, 'desc': "Method not allowed"}), 405
@@ -167,28 +151,41 @@ def get_photo(image):
 def upload_image():
     if request.method == 'POST':
         try:
+            # Get data from form
             file = request.files['file']
             menu_id = request.form['menu_id']
+            # Select menu item with id = menu_id
             menu = Menu.query.filter(Menu.item_id == int(menu_id)).first()
         except Exception:
            return jsonify({'code': 401, 'desc': "Incorrect data"}), 401
+        # if file was selected
         if file:
+            # if menu item exists
             if menu:
                 try:
-                    filename = secure_filename(file.filename)
+                    # Generate unique sequence with 7 signs (garbage)
+                    uuidstr = str(uuid.uuid4())[1:8]
+                    # Check filename and add garbage
+                    filename = uuidstr + secure_filename(file.filename)
+                    # Translate photo in base64 object
                     base = base64.b16encode(file.read())
-                    image = Images(str(filename), base)
+                    # Call constructor Images with filename and base64 object
+                    image = Images(menu.item_id, str(filename), base)
+                    # Add data to DB
                     db.session.add(image)
                     db.session.commit()
-                    # //
+                    # Update field menu_photo in Menu table with new PATH to photo
                     menu.photo = str(app.config['PATH']+str(filename))
                     db.session.add(menu)
                     db.session.commit()
+                    # Change last update date
                     update = LastUpdate().update_db()
                 except Exception:
-                   return jsonify({'code': 405, 'desc': "Method not allowed"}), 405
-                return ('OK')
-            return jsonify({'code': 203, 'desc': "No such item detected"}), 203
+                   return jsonify({'code': 405, 'desc': "Cannot process this file"}), 405
+            else:
+                return jsonify({'code': 203, 'desc': "No such item detected"}), 203
+    # Bring form for uploading a new file
+    # ADD MESSAGE IF OKAY
     return Response('''
     <!doctype html>
     <title>Upload new File</title>

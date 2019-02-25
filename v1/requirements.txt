@@ -3,6 +3,7 @@ Babel==2.6.0
 blinker==1.4
 Click==7.0
 Flask==1.0.2
+Flask-Admin==1.5.3
 Flask-BabelEx==0.9.3
 Flask-Login==0.4.1
 Flask-LoginManager==1.1.6
