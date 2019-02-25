@@ -8,4 +8,4 @@ class Configuration(object):
     SECRET_KEY = 'somethimngverysercret'
     UPLOAD_FOLDER = 'C:\\Users\\Doc\\Desktop\\Zappa\\Na_Rogah\\app\\v1\\photos'
     # PATH = 'localhost:5000/photos/'
-    PATH = 'na-rogah-api.herokuapp.com/photos/'
+    PATH = 'https://na-rogah-api.herokuapp.com/photos/'
