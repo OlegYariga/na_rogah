@@ -65,9 +65,10 @@ class Menu(db.Model):
     image = db.relationship('Images', backref='menu', uselist=False)
 
     def prepare_json(self):
+        _class = Class.query.filter(Class.class_id == self.class_id).first()
         return {
             'item_id': self.item_id,
-            'class_id': self.class_id,
+            'class_name': _class.name,
             'name': self.name,
             'price': self.price,
             'photo': self.photo,
