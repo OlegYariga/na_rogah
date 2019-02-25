@@ -3,7 +3,7 @@ class Configuration(object):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # SQLALCHEMY_DATABASE_URI = 'postgres+psycopg2://postgres:admin@localhost/narogah'
-    SQLALCHEMY_DATABASE_URI = 'postgres+psycopg2://yhrxhbrfbogimk:47626d88c9e87f23a71d76448009d0cabb6a2921bab9d2db261027c4d18f8536@ec2-46-137-158-249.eu-west-1.compute.amazonaws.com:5432/df14qckbnogd15'
+    SQLALCHEMY_DATABASE_URI = 'postgres://lselsjnaieikfj:d63b9e42bbd21b61816dbf3177141e3773604275ee673617a3d9cf8fbf8a6859@ec2-46-137-170-51.eu-west-1.compute.amazonaws.com:5432/d95c9jl6vpo64i'
     SECRET_KEY = 'somethimngverysercret'
     UPLOAD_FOLDER = 'C:\\Users\\Doc\\Desktop\\Zappa\\Na_Rogah\\app\\v1\\photos'
     # PATH = 'localhost:5000/photos/'
