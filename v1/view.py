@@ -152,7 +152,7 @@ def hi():
     return uuidstr
 
 # TEST METHOD - error responses
-@app.route('/get_wrong/<id>', methods=['GET', 'POST'])
+@app.route('/get_wrong/<i_id>', methods=['GET', 'POST'])
 def get_wrong(i_id):
     if i_id == '200':
         return jsonify({'code': 200, 'desc': "OK"}), 200
