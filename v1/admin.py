@@ -8,11 +8,14 @@ from models import *
 
 # Create class our AdminView
 class BaseModelView(ModelView):
+    # When change any model in admin panel
     def on_model_change(self, form, model, is_created):
         # Call function, which refreshes db-update date
         image = LastUpdate().update_db()
 
+    # When delete ange any model in admin panel
     def on_model_delete(self, model):
+        # Call function, which refreshes db-update date
         image = LastUpdate().update_db()
 
 
@@ -24,14 +27,8 @@ class MenuAdminView(BaseModelView):
     }
     # Add necessary fields ( because we need to hide 'photo' field
     form_columns = ['photo', 'Class', 'name', 'price', 'desc_short', 'desc_long', 'weight', 'recommended', 'file']
-    """
-    # Load image in DB when model changes
-    def on_model_change(self, form, model, is_created):
-        # Call function, which refreshes db-update date
-        model.load_image()
-        return super(MenuAdminView, self).on_model_change(form, model, is_created)
-    """
 
+    # Upload image to DB after model changed
     def after_model_change(self, form, model, is_created):
         model.load_image()
         return super(MenuAdminView, self).on_model_change(form, model, is_created)
