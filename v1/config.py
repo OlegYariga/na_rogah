@@ -9,3 +9,6 @@ class Configuration(object):
     UPLOAD_FOLDER = 'C:\\Users\\Doc\\Desktop\\Zappa\\Na_Rogah\\app\\v1\\photos'
     # PATH = 'localhost:5000/photos/'
     PATH = 'https://na-rogah-api.herokuapp.com/photos/'
+
+    SECURITY_PASSWORD_SALT = 'sequritipasswordsalttonotbeenencrypted852753951'
+    SECURITY_PASSWORD_HASH = 'sha256_crypt'

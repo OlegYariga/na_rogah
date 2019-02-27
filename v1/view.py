@@ -1,7 +1,7 @@
 import json
 from flask import request, jsonify, session, Response, make_response, send_from_directory
 from werkzeug import secure_filename
-from models import Auth, Users
+from models import Users
 from models import LastUpdate
 from models import Class, Menu, Images
 from app import *
@@ -67,6 +67,27 @@ def get_menu(class_id):
     return Response(result, mimetype='application/json')
 
 
+@app.route('/get_all_items', methods=['GET'])
+def get_all_items():
+    try:
+        # Select all dishes from DB
+        menu_items = Menu.query.all()
+        menu_list = []
+        for items in menu_items:
+            # Append list by new items (json)
+            menu_list.append(items.prepare_json())
+        # Jsonificate result
+        result = json.dumps({'menu': menu_list})
+    except TypeError:
+        # If program cannot translate data to json or can't append list
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        # If There're other SERVER errors
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    # If OKAY, send data to client
+    return Response(result, mimetype='application/json')
+
+
 # Sends file from the database to client
 @app.route('/photos/<image>', methods=['GET'])
 def get_photo(image):
@@ -121,8 +142,8 @@ def get_dish_count():
 #
 # ############ FUNCTIONS REQUERES MODIFICATION #######
 #
-
-
+# I NEED TO CHANGE IT A LITTLE BIT
+"""
 # User authorization with create session
 @app.route('/auth', methods=['POST'])
 def authorize():
@@ -131,9 +152,9 @@ def authorize():
         data = request.data
         json_data = json.loads(data)
         # Select record from DB, where login=login
-        auth = Auth.query.filter(Auth.login == json_data['login']).first()
+        auth = Auth.query.filter(Auth.email == json_data['email']).first()
         if not auth:
-            return jsonify({'code': 401, 'desc': "Login incorrect"}), 401
+            return jsonify({'code': 401, 'desc': "Email incorrect"}), 401
         # Check password incorrect
         if auth.password != json_data['password']:
             return jsonify({'code': 401, 'desc': "Password incorrect"}), 401
@@ -145,11 +166,13 @@ def authorize():
         return jsonify({'code': 200, 'desc': "Authorized",
                         'login': str(auth.login), 'uuid': unique}), 200
 
-
+"""
 @app.route('/hi', methods=['GET', 'POST'])
+@login_required
 def hi():
     uuidstr = str(uuid.uuid4())[1:8]
     return uuidstr
+
 
 # TEST METHOD - error responses
 @app.route('/get_wrong/<i_id>', methods=['GET', 'POST'])

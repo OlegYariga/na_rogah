@@ -7,29 +7,38 @@ import base64
 from flask import request, jsonify, session, Response, make_response, send_from_directory
 import uuid
 from werkzeug import secure_filename
+from flask_security import UserMixin, RoleMixin
+
+# This table stores relations Users and Roles
+roles_users = db.Table('roles_users',
+                       db.Column('user_id', db.BigInteger(), db.ForeignKey('users.id')),
+                       db.Column('role_id', db.BigInteger(), db.ForeignKey('role.id'))
+                       )
 
 
-# Class Auth stores user login and password
-class Auth(db.Model):
-    user_id = db.Column(db.BigInteger, primary_key=True)
-    login = db.Column(db.String(64), unique=True)
-    password = db.Column(db.String(64))
-    user = db.relationship('Users', backref='auth', uselist=False)
-
-    def __init__(self, *args, **kwargs):
-        super(Auth, self).__init__(*args, **kwargs)
-
-
-# Class Users stores user data
-class Users(db.Model):
+# Class USER stores user credentials and info
+class Users(db.Model, UserMixin):
     id = db.Column(db.BigInteger, primary_key=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey('auth.user_id'))
+    email = db.Column(db.String(128), unique=True)
+    password = db.Column(db.String(256))
     reg_date = db.Column(db.DateTime, default=datetime.now())
     name = db.Column(db.String(64))
     surname = db.Column(db.String(64))
     birthday = db.Column(db.DateTime)
     phone = db.Column(db.String(25))
-    email = db.Column(db.String(64))
+
+    # For Flask-Security
+    roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
+    active = db.Column(db.Boolean())
+
+    def __init__(self, *args, **kwargs):
+        super(Users, self).__init__(*args, **kwargs)
+
+
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.BigInteger(), primary_key=True)
+    name = db.Column(db.String(100), unique=True)
+    description = db.Column(db.String(255))
 
 
 # Class Class stores info about dish categories
@@ -106,14 +115,6 @@ class Menu(db.Model):
         try:
             # Select images from DB where image.item_id == Menu.item_id
             images = Images.query.filter(self.item_id == Images.item_id).delete()
-            """
-            # Delete all images with item_id
-            for image in images:
-                db.session.delete(image)
-            # Commit changes
-            db.session.commit()
-            return 'OK'
-            """
         except Exception:
             return 'NOT OK'
 
