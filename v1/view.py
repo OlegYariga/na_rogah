@@ -71,7 +71,7 @@ def get_menu(class_id):
 def get_all_items():
     try:
         # Select all dishes from DB
-        menu_items = Menu.query.all()
+        menu_items = Menu.query.order_by(Menu.item_id).all()
         menu_list = []
         for items in menu_items:
             # Append list by new items (json)
