@@ -56,7 +56,7 @@ class Class(db.Model):
             items_list = []
             for item in menu:
                 items_list.append(item.prepare_json())
-            result = json.dumps({'class_id': self.class_id, 'data': items_list})
+            result = json.dumps(items_list)
             return result
         except Exception:
             return ""
