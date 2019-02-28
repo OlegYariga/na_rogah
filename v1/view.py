@@ -88,6 +88,27 @@ def get_all_items():
     return Response(result, mimetype='application/json')
 
 
+@app.route('/get_menu_by_classes', methods=['GET'])
+def get_menu_by_classes():
+    try:
+        # Select all dishes from DB
+        class_items = Class.query.order_by(Class.class_id).all()
+        class_list = []
+        for items in class_items:
+            # Append list by new items (json)
+            class_list.append(items.prepare_menu_items_json())
+        # Jsonificate result
+        result = json.dumps({'menu': class_list})
+    except TypeError:
+        # If program cannot translate data to json or can't append list
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        # If There're other SERVER errors
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    # If OKAY, send data to client
+    return Response(result, mimetype='application/json')
+
+
 # Sends file from the database to client
 @app.route('/photos/<image>', methods=['GET'])
 def get_photo(image):

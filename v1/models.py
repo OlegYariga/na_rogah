@@ -50,6 +50,17 @@ class Class(db.Model):
     def __init__(self, *args, **kwargs):
         super(Class, self).__init__(*args, **kwargs)
 
+    def prepare_menu_items_json(self):
+        try:
+            menu = Menu.query.filter(self.class_id == Menu.class_id).all()
+            items_list = []
+            for item in menu:
+                items_list.append(item.prepare_json())
+            result = json.dumps({'class_id': self.class_id, 'data': items_list})
+            return result
+        except Exception:
+            return ""
+
     def prepare_json(self):
         return {
             'class_id': self.class_id,
