@@ -22,7 +22,7 @@ app.config.from_object(Configuration)
 db = SQLAlchemy(app)
 
 # Create Migration db
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
@@ -44,7 +44,7 @@ admin = Admin(app, 'Na Rogah', url='/', index_view=HomeAdminView(name='Home'))
 admin.add_view(ClassAdminView(Class, db.session))
 admin.add_view(MenuAdminView(Menu, db.session))
 admin.add_view(ImageAdminView(Images, db.session))
-
+admin.add_view(UsersAdminView(Users, db.session))
 
 # FLASK-SECURITY
 user_datastore = SQLAlchemyUserDatastore(db, Users, Role)

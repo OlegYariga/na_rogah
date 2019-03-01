@@ -2,14 +2,14 @@ from flask import Flask
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import form
-from wtforms import FileField
+from wtforms import FileField, PasswordField
 from flask_security import SQLAlchemyUserDatastore
 from flask_security import Security
 from flask_security import current_user
 from flask import redirect, url_for
 from flask_admin import AdminIndexView
 from models import *
-
+from app import db
 
 # Create class, defining access roles and redirect to login page
 class AdminMixin:
@@ -65,3 +65,6 @@ class ClassAdminView(BaseModelView):
 class ImageAdminView(BaseModelView):
     pass
 
+
+class UsersAdminView(BaseModelView):
+    pass

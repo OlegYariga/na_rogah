@@ -26,7 +26,6 @@ class Users(db.Model, UserMixin):
     surname = db.Column(db.String(64))
     birthday = db.Column(db.DateTime)
     phone = db.Column(db.String(25))
-
     # For Flask-Security
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
     active = db.Column(db.Boolean())
@@ -35,6 +34,7 @@ class Users(db.Model, UserMixin):
         super(Users, self).__init__(*args, **kwargs)
 
 
+# Stores user roles
 class Role(db.Model, RoleMixin):
     id = db.Column(db.BigInteger(), primary_key=True)
     name = db.Column(db.String(100), unique=True)
@@ -78,11 +78,11 @@ class Menu(db.Model):
     item_id = db.Column(db.BigInteger, primary_key=True)
     class_id = db.Column(db.BigInteger, db.ForeignKey(Class.class_id))
     name = db.Column(db.String(128))
-    price = db.Column(db.Float)
+    price = db.Column(db.Integer)
     photo = db.Column(db.Text)
     desc_short = db.Column(db.Text)
     desc_long = db.Column(db.Text)
-    weight = db.Column(db.Integer)
+    weight = db.Column(db.String(36))
     recommended = db.Column(db.String(64))
     image = db.relationship('Images', backref='menu', uselist=False)
 
