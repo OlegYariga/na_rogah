@@ -98,7 +98,7 @@ def get_menu_by_classes():
             # Append list by new items (json)
             class_list.append(items.prepare_menu_items_json())
         # Jsonificate result
-        result = json.dumps({'menu': class_list})
+        result = json.dumps({'categories': class_list})
     except TypeError:
         # If program cannot translate data to json or can't append list
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
