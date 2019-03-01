@@ -46,7 +46,7 @@ def get_classes():
 def get_menu(class_id):
     try:
         # Select menu from DB where class_id == <class_id>
-        menu = Menu.query.filter(Menu.class_id == int(class_id)).order_by(Menu.item_id).all()
+        menu = Menu.query.filter(Menu.class_id == int(class_id)).order_by(Menu.name).all()
         # Create empty list
         menu_list = []
         for items in menu:

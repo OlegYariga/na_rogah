@@ -52,7 +52,7 @@ class Class(db.Model):
 
     def prepare_menu_items_json(self):
         try:
-            menu = Menu.query.filter(self.class_id == Menu.class_id).all()
+            menu = Menu.query.filter(self.class_id == Menu.class_id).order_by(Menu.name).all()
             items_list = []
             for item in menu:
                 items_list.append(item.prepare_json())
