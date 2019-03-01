@@ -96,7 +96,7 @@ def get_menu_by_classes():
         class_list = []
         for items in class_items:
             # Append list by new items (json)
-            class_list.append(items.prepare_menu_items_json())
+            class_list.append(json.loads(items.prepare_menu_items_json()))
         # Jsonificate result
         result = json.dumps({'categories': class_list})
     except TypeError:
