@@ -9,6 +9,35 @@ import uuid
 from werkzeug import secure_filename
 from flask_security import UserMixin, RoleMixin
 
+
+items_orders = db.Table('items_orders',
+                       db.Column('item_id', db.BigInteger(), db.ForeignKey('items.id')),
+                       db.Column('order_id', db.BigInteger(), db.ForeignKey('orders.id'))
+                       )
+
+
+class Items(db.Model):
+    id = db.Column(db.BigInteger, primary_key=True)
+    name = db.Column(db.String(28))
+    count = db.Column(db.Integer)
+    order = db.relationship('Orders', secondary=items_orders, backref=db.backref('items', lazy='dynamic'))
+
+
+# This table stores relations Users and Roles
+orders_users = db.Table('orders_users',
+                       db.Column('order_id', db.BigInteger(), db.ForeignKey('orders.id')),
+                       db.Column('user_id', db.BigInteger(), db.ForeignKey('users.id'))
+                       )
+
+
+class Orders(db.Model):
+    id = db.Column(db.BigInteger, primary_key=True)
+    order_date = db.Column(db.DateTime)
+    table_num = db.Column(db.Integer)
+    total = db.Column(db.Integer)
+    user = db.relationship('Users', secondary=orders_users, backref=db.backref('orders', lazy='dynamic'))
+
+
 # This table stores relations Users and Roles
 roles_users = db.Table('roles_users',
                        db.Column('user_id', db.BigInteger(), db.ForeignKey('users.id')),
@@ -19,8 +48,8 @@ roles_users = db.Table('roles_users',
 # Class USER stores user credentials and info
 class Users(db.Model, UserMixin):
     id = db.Column(db.BigInteger, primary_key=True)
-    email = db.Column(db.String(128), unique=True)
-    password = db.Column(db.String(256))
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    password = db.Column(db.String(256), nullable=False)
     reg_date = db.Column(db.DateTime, default=datetime.now())
     name = db.Column(db.String(64))
     surname = db.Column(db.String(64))
@@ -40,11 +69,15 @@ class Role(db.Model, RoleMixin):
     name = db.Column(db.String(100), unique=True)
     description = db.Column(db.String(255))
 
+    def __repr__(self):
+        return self.name
+
 
 # Class Class stores info about dish categories
 class Class(db.Model):
     class_id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String(64))
+    order = db.Column(db.Integer)
     menu = db.relationship('Menu', backref='Class', lazy='dynamic')
 
     def __init__(self, *args, **kwargs):
@@ -66,7 +99,8 @@ class Class(db.Model):
     def prepare_json(self):
         return {
             'class_id': self.class_id,
-            'name': self.name
+            'name': self.name,
+            'order': self.order
         }
 
     def __repr__(self):

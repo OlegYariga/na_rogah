@@ -11,4 +11,4 @@ class Configuration(object):
     PATH = 'https://na-rogah-api.herokuapp.com/photos/'
 
     SECURITY_PASSWORD_SALT = 'sequritipasswordsalttonotbeenencrypted852753951'
-    SECURITY_PASSWORD_HASH = 'sha256_crypt'
+    SECURITY_PASSWORD_HASH = 'plaintext'

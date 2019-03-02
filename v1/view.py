@@ -9,6 +9,11 @@ from datetime import timedelta
 from flask_security import login_required
 import uuid
 import base64
+import hashlib
+from flask_security.utils import hash_password
+from app import user_datastore
+from flask_security.utils import hash_password
+from sqlalchemy import and_, or_
 
 
 # Make session permanent with lifetime=1 before request
@@ -160,34 +165,36 @@ def get_dish_count():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
+# User authorization with create session
+@app.route('/auth', methods=['POST'])
+def authorize():
+    try:
+        # Get data and convert them to JSON
+        data = request.data
+        json_data = json.loads(data)
+        # Select record from DB, where email==email and password==password
+        user = Users.query.filter(and_(Users.email == json_data['email'],
+                                       Users.password == json_data['password'])).first()
+        if user:
+            # Generate unique identifier
+            unique = str(uuid.uuid4())
+            # Create new session with key <login> and unique value
+            session[str(user.email)] = unique
+            # Create a response
+            return jsonify({'code': 200, 'desc': "Authorized",
+                            'email': str(user.email), 'uuid': unique}), 200
+        return jsonify({'code': 401, 'desc': "Credentials incorrect"}), 401
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
 #
 # ############ FUNCTIONS REQUERES MODIFICATION #######
 #
 # I NEED TO CHANGE IT A LITTLE BIT
-"""
-# User authorization with create session
-@app.route('/auth', methods=['POST'])
-def authorize():
-    if request.method == 'POST':
-        # Get data and convert them to JSON
-        data = request.data
-        json_data = json.loads(data)
-        # Select record from DB, where login=login
-        auth = Auth.query.filter(Auth.email == json_data['email']).first()
-        if not auth:
-            return jsonify({'code': 401, 'desc': "Email incorrect"}), 401
-        # Check password incorrect
-        if auth.password != json_data['password']:
-            return jsonify({'code': 401, 'desc': "Password incorrect"}), 401
-        # Generate unique identifier
-        unique = str(uuid.uuid4())
-        # Create new session with key <login> and unique value
-        session[str(auth.login)] = unique
-        # Create a response
-        return jsonify({'code': 200, 'desc': "Authorized",
-                        'login': str(auth.login), 'uuid': unique}), 200
 
-"""
+
 @app.route('/hi', methods=['GET', 'POST'])
 @login_required
 def hi():
