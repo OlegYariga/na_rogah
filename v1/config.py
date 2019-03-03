@@ -12,3 +12,13 @@ class Configuration(object):
 
     SECURITY_PASSWORD_SALT = 'sequritipasswordsalttonotbeenencrypted852753951'
     SECURITY_PASSWORD_HASH = 'plaintext'
+
+    # For Email sending
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 465
+    # MAIL_USE_TLS = True
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = 'oyariga@gmail.com'
+    MAIL_PASSWORD = 'qwertyui1234'
+    MAIL_DEFAULT_SENDER = 'oyariga@gmail.com'
+

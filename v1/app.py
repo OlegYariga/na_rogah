@@ -11,6 +11,7 @@ from flask_admin import form
 from wtforms import FileField
 from flask_security import SQLAlchemyUserDatastore
 from flask_security import Security
+from flask_mail import Mail
 
 
 # Create class instance Flask with name app
@@ -49,3 +50,6 @@ admin.add_view(UsersAdminView(Users, db.session))
 # FLASK-SECURITY
 user_datastore = SQLAlchemyUserDatastore(db, Users, Role)
 security = Security(app, user_datastore)
+
+# For sending emails with Flask-Mail
+mail = Mail(app)

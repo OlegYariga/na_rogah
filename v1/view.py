@@ -14,13 +14,16 @@ from flask_security.utils import hash_password
 from app import user_datastore
 from flask_security.utils import hash_password
 from sqlalchemy import and_, or_
+from app import mail
+from flask_mail import Message
+from random import randint
 
 
 # Make session permanent with lifetime=1 before request
 @app.before_request
 def make_session_permanent():
     session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=1)
+    app.permanent_session_lifetime = timedelta(minutes=5)
 
 
 # Returns all dish categories (in array)
@@ -97,7 +100,7 @@ def get_all_items():
 def get_menu_by_classes():
     try:
         # Select all dishes from DB
-        class_items = Class.query.order_by(Class.class_id).all()
+        class_items = Class.query.order_by(Class.order).all()
         class_list = []
         for items in class_items:
             # Append list by new items (json)
@@ -189,6 +192,57 @@ def authorize():
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
+
+@app.route('/verify_email', methods=['POST'])
+def verify_email():
+    # Get data and convert them to JSON (ONLY email)
+    data = request.data
+    json_data = json.loads(data)
+    code = str(randint(10000, 99999))
+    msg = Message()
+    msg.subject = 'Na-Rogah verify e-mail'
+    msg.recipients = [json_data['email']]
+    msg.body = 'Добро пожаловать в ресторан "На Рогах"! Ваш код подтверждения - ' + code
+    mail.send(msg)
+    session[str(json_data['email'])] = str(code)
+    return jsonify({'code': 200, 'desc': "Email was sent"}), 200
+
+
+@app.route('/reg_user', methods=['POST'])
+def reg_user():
+    # Get data and convert into JSON (email, password, code
+    data = request.data
+    json_data = json.loads(data)
+    if json_data['email'] in session:
+        if str(json_data['code']) == str(session[json_data['email']]):
+            user_exist = Users.query.filter(Users.email == json_data['email']).first()
+            if not user_exist:
+                user = Users(email=json_data['email'], password=json_data['password'],
+                             name=json_data['name'], surname=json_data['surname'],
+                             birthday=json_data['birthday'], phone=json_data['phone'],
+                             active=False)
+                db.session.add(user)
+                db.session.commit()
+                return jsonify({'code': 200, 'desc': "OK"}), 200
+            return jsonify({'code': 401, 'desc': "User already exists"}), 401
+    return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+
+
+@app.route('/password_recovery', methods=['POST'])
+def password_recovery():
+    data = request.data
+    json_data = json.loads(data)
+    if json_data['email'] in session:
+        user_recovery = Users.query.filter(Users.email == json_data['email']).first()
+        if str(json_data['code']) == str(session[json_data['email']]) and user_recovery:
+            user_recovery.password = json_data['password']
+            db.session.add(user_recovery)
+            db.session.commit()
+            return jsonify({'code': 200, 'desc': "OK"}), 200
+        return jsonify({'code': 401, 'desc': "No such user detected"}), 401
+    return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+
+
 #
 # ############ FUNCTIONS REQUERES MODIFICATION #######
 #
@@ -196,8 +250,9 @@ def authorize():
 
 
 @app.route('/hi', methods=['GET', 'POST'])
-@login_required
 def hi():
+    msg = Message(subject='Helo!', recipients=['yarigaoleg@mail.ru'], body='We need to helo U')
+    mail.send(msg)
     uuidstr = str(uuid.uuid4())[1:8]
     return uuidstr
 
