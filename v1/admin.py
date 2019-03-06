@@ -1,16 +1,8 @@
-from flask import Flask
-from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from flask_admin import form
-from wtforms import FileField, PasswordField
-from wtforms.validators import InputRequired, EqualTo
-from flask_security import SQLAlchemyUserDatastore
-from flask_security import Security
 from flask_security import current_user
 from flask import redirect, url_for
 from flask_admin import AdminIndexView
 from models import *
-from app import db
 
 
 # Create class, defining access roles and redirect to login page
@@ -47,7 +39,7 @@ class MenuAdminView(BaseModelView):
         'file': FileField('File')
     }
     # Add necessary fields ( because we need to hide 'photo' field
-    form_columns = ['photo', 'Class', 'name', 'price', 'desc_short', 'desc_long', 'weight', 'recommended', 'file']
+    form_columns = ['Category', 'name', 'price', 'desc_short', 'desc_long', 'weight', 'recommended', 'file']
 
     # Upload image to DB after model changed
     def after_model_change(self, form, model, is_created):
@@ -60,7 +52,7 @@ class MenuAdminView(BaseModelView):
         return super(MenuAdminView, self).on_model_delete(model)
 
 
-class ClassAdminView(BaseModelView):
+class CategoryAdminView(BaseModelView):
     pass
 
 
@@ -69,7 +61,7 @@ class ImageAdminView(BaseModelView):
 
 
 class UsersAdminView(BaseModelView):
-    form_columns = ['roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active', 'password']
+    form_columns = ['roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active']
     column_list = ('roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active')
     can_create = False
     can_delete = False

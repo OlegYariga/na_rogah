@@ -1,23 +1,23 @@
-import json
-from flask import request, jsonify, session, Response, make_response, send_from_directory
-from werkzeug import secure_filename
-from models import Users
-from models import LastUpdate
-from models import Class, Menu, Images
-from app import *
-from datetime import timedelta
-from flask_security import login_required
 import uuid
 import base64
-import hashlib
-from flask_security.utils import hash_password
-from app import user_datastore
-from flask_security.utils import hash_password
-from sqlalchemy import and_, or_
-from app import mail
-from flask_mail import Message
+import json
 from random import randint
+from datetime import timedelta
 
+from flask import request, jsonify, session, Response, make_response, send_from_directory
+from flask_security import login_required
+from flask_mail import Message
+from sqlalchemy import and_, or_
+from werkzeug import secure_filename
+
+from models import Users
+from models import LastUpdate
+from models import Category, Menu, Images
+from app import *
+from app import mail
+
+# Load APPLICATION_ROOT from config
+def_route = '/api/v1'
 
 # Make session permanent with lifetime=1 before request
 @app.before_request
@@ -27,11 +27,11 @@ def make_session_permanent():
 
 
 # Returns all dish categories (in array)
-@app.route('/get_classes', methods=['GET'])
+@app.route(def_route+'/categories', methods=['GET'])
 def get_classes():
     try:
         # Select categories from DB
-        food_class = Class.query.order_by(Class.class_id).all()
+        food_class = Category.query.order_by(Category.category_id).all()
         # Create empty list
         food_set = []
         for food_item in food_class:
@@ -50,11 +50,11 @@ def get_classes():
 
 
 # Returns all menu items, associated with class_id
-@app.route('/get_menu/<class_id>', methods=['GET'])
+@app.route(def_route+'/menu/<class_id>', methods=['GET'])
 def get_menu(class_id):
-    try:
-        # Select menu from DB where class_id == <class_id>
-        menu = Menu.query.filter(Menu.class_id == int(class_id)).order_by(Menu.name).all()
+    #try:
+        # Select menu from DB where Category.category_id == <class_id>
+        menu = Menu.query.filter(Menu.category_id == int(class_id)).order_by(Menu.name).all()
         # Create empty list
         menu_list = []
         for items in menu:
@@ -62,20 +62,20 @@ def get_menu(class_id):
             menu_list.append(items.prepare_json())
         # Jsonificate result
         result = json.dumps({'menu': menu_list})
-    except ValueError:
+    #except ValueError:
         # If GET parameter was wrong
-        return jsonify({'code': 415, 'desc': "Not int-parameter was received"}), 415
-    except TypeError:
+        #return jsonify({'code': 415, 'desc': "Not int-parameter was received"}), 415
+    #except TypeError:
         # If program cannot translate data to json or can't append list
-        return jsonify({'code': 400, 'desc': "Bad request"}), 400
-    except Exception:
+        #return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    #except Exception:
         # If There're other SERVER errors
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
     # If OKAY, send data to client
-    return Response(result, mimetype='application/json')
+        return Response(result, mimetype='application/json')
 
 
-@app.route('/get_all_items', methods=['GET'])
+@app.route(def_route+'/get_all_items', methods=['GET'])
 def get_all_items():
     try:
         # Select all dishes from DB
@@ -96,11 +96,11 @@ def get_all_items():
     return Response(result, mimetype='application/json')
 
 
-@app.route('/get_menu_by_classes', methods=['GET'])
+@app.route(def_route+'/menu_by_classes', methods=['GET'])
 def get_menu_by_classes():
     try:
         # Select all dishes from DB
-        class_items = Class.query.order_by(Class.order).all()
+        class_items = Category.query.order_by(Category.order).all()
         class_list = []
         for items in class_items:
             # Append list by new items (json)
@@ -118,7 +118,7 @@ def get_menu_by_classes():
 
 
 # Sends file from the database to client
-@app.route('/photos/<image>', methods=['GET'])
+@app.route(def_route+'/photos/<image>', methods=['GET'])
 def get_photo(image):
     try:
         # Get first base64 object photo with name <image> from database
@@ -147,29 +147,20 @@ def get_photo(image):
 
 
 # Sends to a client last db update (date and time)
-@app.route('/check_update', methods=['GET'])
+@app.route(def_route+'/check_update', methods=['GET'])
 def check_update():
     try:
         # Call function of class LastUpdate
         update = LastUpdate().check_update()
-        return update
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
-
-
-# Sends to client count of rows in Menu table
-@app.route('/get_dish_count', methods=['GET'])
-def get_dish_count():
-    try:
-        # Select count of rows in Menu
         menu_count = Menu.query.count()
-        return str(menu_count)
+        result = jsonify({'date': update, 'count': menu_count})
+        return result
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 # User authorization with create session
-@app.route('/auth', methods=['POST'])
+@app.route(def_route+'/auth', methods=['POST'])
 def authorize():
     try:
         # Get data and convert them to JSON
@@ -193,7 +184,7 @@ def authorize():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-@app.route('/verify_email', methods=['POST'])
+@app.route(def_route+'/verify_email', methods=['POST'])
 def verify_email():
     # Get data and convert them to JSON (ONLY email)
     data = request.data
@@ -208,7 +199,7 @@ def verify_email():
     return jsonify({'code': 200, 'desc': "Email was sent"}), 200
 
 
-@app.route('/reg_user', methods=['POST'])
+@app.route(def_route+'/reg_user', methods=['POST'])
 def reg_user():
     # Get data and convert into JSON (email, password, code
     data = request.data
@@ -228,7 +219,7 @@ def reg_user():
     return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
 
 
-@app.route('/password_recovery', methods=['POST'])
+@app.route(def_route+'/password_recovery', methods=['POST'])
 def password_recovery():
     data = request.data
     json_data = json.loads(data)
@@ -249,7 +240,7 @@ def password_recovery():
 # I NEED TO CHANGE IT A LITTLE BIT
 
 
-@app.route('/hi', methods=['GET', 'POST'])
+@app.route(def_route+'/hi', methods=['GET', 'POST'])
 def hi():
     msg = Message(subject='Helo!', recipients=['yarigaoleg@mail.ru'], body='We need to helo U')
     mail.send(msg)
@@ -258,7 +249,7 @@ def hi():
 
 
 # TEST METHOD - error responses
-@app.route('/get_wrong/<i_id>', methods=['GET', 'POST'])
+@app.route(def_route+'/get_wrong/<i_id>', methods=['GET', 'POST'])
 def get_wrong(i_id):
     if i_id == '200':
         return jsonify({'code': 200, 'desc': "OK"}), 200

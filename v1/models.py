@@ -1,13 +1,14 @@
-from app import db
-from app import *
-from datetime import datetime
-from flask import jsonify, make_response
+import uuid
 import json
 import base64
-from flask import request, jsonify, session, Response, make_response, send_from_directory
-import uuid
+from datetime import datetime
+
+from flask import request, jsonify
 from werkzeug import secure_filename
 from flask_security import UserMixin, RoleMixin
+
+from app import db
+from app import *
 
 
 items_orders = db.Table('items_orders',
@@ -57,7 +58,7 @@ class Users(db.Model, UserMixin):
     phone = db.Column(db.String(25))
     # For Flask-Security
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
-    active = db.Column(db.Boolean())
+    active = db.Column(db.Boolean(), default=False)
 
     def __init__(self, *args, **kwargs):
         super(Users, self).__init__(*args, **kwargs)
@@ -73,24 +74,24 @@ class Role(db.Model, RoleMixin):
         return self.name
 
 
-# Class Class stores info about dish categories
-class Class(db.Model):
-    class_id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(64))
+# Class Category stores info about dish categories
+class Category(db.Model):
+    category_id = db.Column(db.BigInteger, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
     order = db.Column(db.Integer)
-    menu = db.relationship('Menu', backref='Class', lazy='dynamic')
+    menu = db.relationship('Menu', backref='Category', lazy='dynamic')
 
     def __init__(self, *args, **kwargs):
-        super(Class, self).__init__(*args, **kwargs)
+        super(Category, self).__init__(*args, **kwargs)
 
     def prepare_menu_items_json(self):
         try:
-            menu = Menu.query.filter(self.class_id == Menu.class_id).order_by(Menu.name).all()
+            menu = Menu.query.filter(self.category_id == Menu.category_id).order_by(Menu.name).all()
             items_list = []
             for item in menu:
                 items_list.append(item.prepare_json())
 
-            result = json.dumps({'category_id': self.class_id, 'category_name': self.name,
+            result = json.dumps({'category_id': self.category_id, 'category_name': self.name,
                                  'category_dishes': items_list})
             return result
         except Exception:
@@ -98,7 +99,7 @@ class Class(db.Model):
 
     def prepare_json(self):
         return {
-            'class_id': self.class_id,
+            'class_id': self.category_id,
             'name': self.name,
             'order': self.order
         }
@@ -110,8 +111,8 @@ class Class(db.Model):
 # Class Menu stores info about menu items
 class Menu(db.Model):
     item_id = db.Column(db.BigInteger, primary_key=True)
-    class_id = db.Column(db.BigInteger, db.ForeignKey(Class.class_id))
-    name = db.Column(db.String(128))
+    category_id = db.Column(db.BigInteger, db.ForeignKey(Category.category_id))
+    name = db.Column(db.String(128), nullable=False)
     price = db.Column(db.Integer)
     photo = db.Column(db.Text)
     desc_short = db.Column(db.Text)
@@ -121,7 +122,7 @@ class Menu(db.Model):
     image = db.relationship('Images', backref='menu', uselist=False)
 
     def prepare_json(self):
-        _class = Class.query.filter(Class.class_id == self.class_id).first()
+        _class = Category.query.filter(Category.category_id == self.category_id).first()
         return {
             'item_id': self.item_id,
             'class_name': _class.name,

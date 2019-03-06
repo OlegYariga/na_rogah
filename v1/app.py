@@ -12,7 +12,7 @@ from wtforms import FileField
 from flask_security import SQLAlchemyUserDatastore
 from flask_security import Security
 from flask_mail import Mail
-
+import os
 
 # Create class instance Flask with name app
 # Load configurations from config file
@@ -42,9 +42,8 @@ from admin import *
 
 # Create admin panel
 admin = Admin(app, 'Na Rogah', url='/', index_view=HomeAdminView(name='Home'))
-admin.add_view(ClassAdminView(Class, db.session))
+admin.add_view(CategoryAdminView(Category, db.session))
 admin.add_view(MenuAdminView(Menu, db.session))
-admin.add_view(ImageAdminView(Images, db.session))
 admin.add_view(UsersAdminView(Users, db.session))
 
 # FLASK-SECURITY
