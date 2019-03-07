@@ -77,7 +77,7 @@ class Role(db.Model, RoleMixin):
 # Class Category stores info about dish categories
 class Category(db.Model):
     category_id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String(64))
     order = db.Column(db.Integer)
     menu = db.relationship('Menu', backref='Category', lazy='dynamic')
 

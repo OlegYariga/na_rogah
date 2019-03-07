@@ -41,6 +41,7 @@ class MenuAdminView(BaseModelView):
     # Add necessary fields ( because we need to hide 'photo' field
     form_columns = ['Category', 'name', 'price', 'desc_short', 'desc_long', 'weight', 'recommended', 'file']
 
+
     # Upload image to DB after model changed
     def after_model_change(self, form, model, is_created):
         model.load_image()
