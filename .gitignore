@@ -1,10 +1,10 @@
 # Do not track folders:
 
 # __pycashe__
-v1/__pycache__/
+__pycache__/
 
 # flask_session
-v1/flask_session/
+flask_session/
 
 # migrations
 # v1/migrations/
