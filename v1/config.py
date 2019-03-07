@@ -11,8 +11,8 @@ class Configuration(object):
     SECRET_KEY = 'somethimngverysercrettext'
     SESSION_TYPE = 'filesystem'
     UPLOAD_FOLDER = 'C:\\Users\\Doc\\Desktop\\Zappa\\Na_Rogah\\app\\v1\\photos'
-    PATH = 'localhost:5000/photos/'
-    # PATH = 'https://na-rogah-api.herokuapp.com/photos/'
+    PATH = 'localhost:5000/api/v1/photos/'
+    # PATH = 'https://na-rogah-api.herokuapp.com/api/v1/photos/'
 
     SECURITY_PASSWORD_SALT = 'sequritipasswordsalttonotbeenencrypted852753951'
     SECURITY_PASSWORD_HASH = 'plaintext'

@@ -52,7 +52,7 @@ def get_classes():
 # Returns all menu items, associated with class_id
 @app.route(def_route+'/menu/<class_id>', methods=['GET'])
 def get_menu(class_id):
-    #try:
+    try:
         # Select menu from DB where Category.category_id == <class_id>
         menu = Menu.query.filter(Menu.category_id == int(class_id)).order_by(Menu.name).all()
         # Create empty list
@@ -62,17 +62,17 @@ def get_menu(class_id):
             menu_list.append(items.prepare_json())
         # Jsonificate result
         result = json.dumps({'menu': menu_list})
-    #except ValueError:
+    except ValueError:
         # If GET parameter was wrong
-        #return jsonify({'code': 415, 'desc': "Not int-parameter was received"}), 415
-    #except TypeError:
+        return jsonify({'code': 415, 'desc': "Not int-parameter was received"}), 415
+    except TypeError:
         # If program cannot translate data to json or can't append list
-        #return jsonify({'code': 400, 'desc': "Bad request"}), 400
-    #except Exception:
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
         # If There're other SERVER errors
-        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
     # If OKAY, send data to client
-        return Response(result, mimetype='application/json')
+    return Response(result, mimetype='application/json')
 
 
 @app.route(def_route+'/get_all_items', methods=['GET'])
@@ -186,52 +186,67 @@ def authorize():
 
 @app.route(def_route+'/verify_email', methods=['POST'])
 def verify_email():
-    # Get data and convert them to JSON (ONLY email)
-    data = request.data
-    json_data = json.loads(data)
-    code = str(randint(10000, 99999))
-    msg = Message()
-    msg.subject = 'Na-Rogah verify e-mail'
-    msg.recipients = [json_data['email']]
-    msg.body = 'Добро пожаловать в ресторан "На Рогах"! Ваш код подтверждения - ' + code
-    mail.send(msg)
-    session[str(json_data['email'])] = str(code)
-    return jsonify({'code': 200, 'desc': "Email was sent"}), 200
+    try:
+        # Get data and convert them to JSON (ONLY email)
+        data = request.data
+        json_data = json.loads(data)
+        code = str(randint(10000, 99999))
+        msg = Message()
+        msg.subject = 'Na-Rogah verify e-mail'
+        msg.recipients = [json_data['email']]
+        msg.body = 'Добро пожаловать в ресторан "На Рогах"! Ваш код подтверждения - ' + code
+        mail.send(msg)
+        session[str(json_data['email'])] = str(code)
+        return jsonify({'code': 200, 'desc': "Email was sent"}), 200
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/reg_user', methods=['POST'])
 def reg_user():
-    # Get data and convert into JSON (email, password, code
-    data = request.data
-    json_data = json.loads(data)
-    if json_data['email'] in session:
-        if str(json_data['code']) == str(session[json_data['email']]):
-            user_exist = Users.query.filter(Users.email == json_data['email']).first()
-            if not user_exist:
-                user = Users(email=json_data['email'], password=json_data['password'],
-                             name=json_data['name'], surname=json_data['surname'],
-                             birthday=json_data['birthday'], phone=json_data['phone'],
-                             active=False)
-                db.session.add(user)
-                db.session.commit()
-                return jsonify({'code': 200, 'desc': "OK"}), 200
-            return jsonify({'code': 401, 'desc': "User already exists"}), 401
-    return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+    try:
+        # Get data and convert into JSON (email, password, code
+        data = request.data
+        json_data = json.loads(data)
+        if json_data['email'] in session:
+            if str(json_data['code']) == str(session[json_data['email']]):
+                user_exist = Users.query.filter(Users.email == json_data['email']).first()
+                if not user_exist:
+                    user = Users(email=json_data['email'], password=json_data['password'],
+                                 name=json_data['name'], surname=json_data['surname'],
+                                 birthday=json_data['birthday'], phone=json_data['phone'],
+                                 active=False)
+                    db.session.add(user)
+                    db.session.commit()
+                    return jsonify({'code': 200, 'desc': "OK"}), 200
+                return jsonify({'code': 401, 'desc': "User already exists"}), 401
+        return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/password_recovery', methods=['POST'])
 def password_recovery():
-    data = request.data
-    json_data = json.loads(data)
-    if json_data['email'] in session:
-        user_recovery = Users.query.filter(Users.email == json_data['email']).first()
-        if str(json_data['code']) == str(session[json_data['email']]) and user_recovery:
-            user_recovery.password = json_data['password']
-            db.session.add(user_recovery)
-            db.session.commit()
-            return jsonify({'code': 200, 'desc': "OK"}), 200
-        return jsonify({'code': 401, 'desc': "No such user detected"}), 401
-    return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+    try:
+        data = request.data
+        json_data = json.loads(data)
+        if json_data['email'] in session:
+            user_recovery = Users.query.filter(Users.email == json_data['email']).first()
+            if str(json_data['code']) == str(session[json_data['email']]) and user_recovery:
+                user_recovery.password = json_data['password']
+                db.session.add(user_recovery)
+                db.session.commit()
+                return jsonify({'code': 200, 'desc': "OK"}), 200
+            return jsonify({'code': 401, 'desc': "No such user detected"}), 401
+        return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 #

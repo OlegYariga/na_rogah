@@ -7,5 +7,5 @@ v1/__pycache__/
 v1/flask_session/
 
 # migrations
-v1/migrations/
+# v1/migrations/
 #
