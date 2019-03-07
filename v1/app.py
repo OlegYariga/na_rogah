@@ -5,6 +5,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_session import Session
 from flask_loginmanager import LoginManager
+from flask_admin.base import MenuLink
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import form
@@ -45,6 +46,8 @@ admin = Admin(app, 'Na Rogah', url='/', index_view=HomeAdminView(name='Home'))
 admin.add_view(CategoryAdminView(Category, db.session))
 admin.add_view(MenuAdminView(Menu, db.session))
 admin.add_view(UsersAdminView(Users, db.session))
+#logout link
+admin.add_link(MenuLink(name='Logout', category='', url="/logout"))
 
 # FLASK-SECURITY
 user_datastore = SQLAlchemyUserDatastore(db, Users, Role)
