@@ -39,7 +39,8 @@ class MenuAdminView(BaseModelView):
         'file': FileField('File')
     }
     # Add necessary fields ( because we need to hide 'photo' field
-    form_columns = ['photo','Category', 'name', 'price', 'desc_short', 'desc_long', 'weight', 'recommended', 'file']
+    form_columns = ['photo','Category', 'name', 'price', 'desc_short', 'desc_long', 'weight',
+                    'recommended', 'file', 'delivery']
 
 
     # Upload image to DB after model changed
