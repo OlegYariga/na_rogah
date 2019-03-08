@@ -77,7 +77,7 @@ class Role(db.Model, RoleMixin):
 # Class Category stores info about dish categories
 class Category(db.Model):
     category_id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String(15), nullable=False)
     order = db.Column(db.Integer)
     menu = db.relationship('Menu', backref='Category', lazy='dynamic')
 
@@ -112,14 +112,15 @@ class Category(db.Model):
 class Menu(db.Model):
     item_id = db.Column(db.BigInteger, primary_key=True)
     category_id = db.Column(db.BigInteger, db.ForeignKey(Category.category_id))
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(28), nullable=False)
     price = db.Column(db.Integer)
     photo = db.Column(db.Text)
-    desc_short = db.Column(db.Text)
-    desc_long = db.Column(db.Text)
+    desc_short = db.Column(db.String(50))
+    desc_long = db.Column(db.String(180))
     weight = db.Column(db.String(36))
     recommended = db.Column(db.String(64))
     image = db.relationship('Images', backref='menu', uselist=False)
+    delivery = db.Column(db.Boolean, default=True)
 
     def prepare_json(self):
         _class = Category.query.filter(Category.category_id == self.category_id).first()
