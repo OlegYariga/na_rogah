@@ -133,7 +133,8 @@ class Menu(db.Model):
             'desc_short': self.desc_short,
             'desc_long': self.desc_long,
             'weight': self.weight,
-            'recommended': self.recommended
+            'recommended': self.recommended,
+            'delivery': self.delivery
         }
 
     def load_image(self):
