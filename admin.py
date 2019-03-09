@@ -65,6 +65,7 @@ class ImageAdminView(BaseModelView):
 class TablesAdminView(BaseModelView):
     pass
 
+
 class BookingAdminView(BaseModelView):
     pass
 

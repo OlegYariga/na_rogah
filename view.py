@@ -2,9 +2,9 @@ import uuid
 import base64
 import json
 from random import randint
-from datetime import timedelta, time
+from datetime import timedelta, time, date
 
-from flask import request, jsonify, session, Response, make_response, send_from_directory
+from flask import request, jsonify, session, Response, make_response, send_from_directory, render_template
 from flask_security import login_required
 from flask_mail import Message
 from sqlalchemy import and_, or_, not_
@@ -255,8 +255,8 @@ def reserved_places():
     json_data = json.loads(data)
     if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
         booking = Booking.query.filter(and_(json_data['date'] == Booking.date,
-                                            Booking.time >= json_data['time_from'],
-                                            Booking.time <= json_data['time_to'])).all()
+                                            and_(Booking.time >= json_data['time_from'],
+                                            Booking.time <= json_data['time_to']))).all()
         tables = Tables.query.all()
 
         table_list = []
@@ -267,11 +267,26 @@ def reserved_places():
             for order in booking:
                 if (table.table_id == order.table_id) and (table in table_list):
                     table_list.remove(table)
-    return str(table_list)
+        response_list = []
+        for l_table in table_list:
+            response_list.append(l_table.prepare_json())
+
+        #return str(table_list)
+        return jsonify({'data': response_list}), 200
+    return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
 
 
+@app.route(def_route+'/reservation')
+def reservation():
+    flights = Booking.query.all()
+    return render_template('index.html', flights=flights)
 
 
+@app.route(def_route+'/')
+def index():
+    # filter(Booking.date == datetime.now().date())
+    flights = Booking.query.all()
+    return render_template('index.html', flights=flights)
 
 
 #

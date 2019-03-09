@@ -220,6 +220,14 @@ class Tables(db.Model):
     def __repr__(self):
         return str('Столик № '+str(self.number)+',  '+str(self.chair_count)+' мест,  '+str(self.position))
 
+    def prepare_json(self):
+        return {
+            'number': self.number,
+            'chair_type': self.chair_type,
+            'chair_count': self.chair_count,
+            'position': self.position
+        }
+
 
 class Booking(db.Model):
     booking_id = db.Column(db.BigInteger, primary_key=True)

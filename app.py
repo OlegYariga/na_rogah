@@ -40,7 +40,6 @@ from models import *
 # Import admin classes from admin
 from admin import *
 
-
 # Create admin panel
 admin = Admin(app, 'Na Rogah', url='/', index_view=HomeAdminView(name='Home'))
 admin.add_view(CategoryAdminView(Category, db.session))
@@ -57,3 +56,4 @@ security = Security(app, user_datastore)
 
 # For sending emails with Flask-Mail
 mail = Mail(app)
+

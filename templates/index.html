@@ -1,0 +1,42 @@
+<!-- /templates/index.html  -->
+
+    {% extends 'base.html' %}
+
+    {% block content %}
+        <div class="flight-container" style="overflow: none; max-height: 80vh">
+            <div class="table-responsive">
+                <table class="table" id="flights">
+                    <thead>
+                        <tr>
+                            <th scope="col">Дата бронирования</th>
+                            <th scope="col">Время</th>
+                            <th scope="col">Продолжительность (часов)</th>
+                            <th scope="col">ID пользователя</th>
+                            <th scope="col">ID столика</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for flight in flights %}
+                        <tr id={{ flight.booking_id }}>
+                            <th scope="row">{{ flight.date }}</th>
+                            <td> {{flight.time }} </td>
+                            <td> {{ flight.period }} </td>
+                            <td> {{ flight.user_id }} </td>
+                            <td> {{ flight.table_id }} </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+<script>
+
+    setTimeout(function(){
+    $('body, html').scrollTop($(document).height());
+    location.reload();
+}, 30000);
+
+</script>
+    {% endblock %}
