@@ -207,3 +207,27 @@ class LastUpdate(db.Model):
             return str(last_date.log_date_time)
         else:
             return str("")
+
+
+class Tables(db.Model):
+    table_id = db.Column(db.BigInteger, primary_key=True)
+    number = db.Column(db.Integer)
+    chair_type = db.Column(db.String(32))
+    chair_count = db.Column(db.Integer)
+    position = db.Column(db.String(64))
+    booking = db.relationship('Booking', backref='tables', lazy='dynamic')
+
+    def __repr__(self):
+        return str('Столик № '+str(self.number)+',  '+str(self.chair_count)+' мест,  '+str(self.position))
+
+
+class Booking(db.Model):
+    booking_id = db.Column(db.BigInteger, primary_key=True)
+    date = db.Column(db.Date)
+    time = db.Column(db.Time)
+    period = db.Column(db.Integer)
+    user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'))
+    table_id = db.Column(db.BigInteger, db.ForeignKey('tables.table_id'))
+
+    def __repr__(self):
+        return str(str(self.date)+'  '+str(self.time))

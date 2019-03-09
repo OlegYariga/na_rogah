@@ -46,6 +46,8 @@ admin = Admin(app, 'Na Rogah', url='/', index_view=HomeAdminView(name='Home'))
 admin.add_view(CategoryAdminView(Category, db.session))
 admin.add_view(MenuAdminView(Menu, db.session))
 admin.add_view(UsersAdminView(Users, db.session))
+admin.add_view(TablesAdminView(Tables, db.session))
+admin.add_view(BookingAdminView(Booking, db.session))
 #logout link
 admin.add_link(MenuLink(name='Logout', category='', url="/logout"))
 

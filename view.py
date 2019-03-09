@@ -2,12 +2,12 @@ import uuid
 import base64
 import json
 from random import randint
-from datetime import timedelta
+from datetime import timedelta, time
 
 from flask import request, jsonify, session, Response, make_response, send_from_directory
 from flask_security import login_required
 from flask_mail import Message
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, not_
 from werkzeug import secure_filename
 
 from models import Users
@@ -247,6 +247,31 @@ def password_recovery():
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+@app.route(def_route+'/reserved_places', methods=['POST'])
+def reserved_places():
+    data = request.data
+    json_data = json.loads(data)
+    if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+        booking = Booking.query.filter(and_(json_data['date'] == Booking.date,
+                                            Booking.time >= json_data['time_from'],
+                                            Booking.time <= json_data['time_to'])).all()
+        tables = Tables.query.all()
+
+        table_list = []
+        for table in tables:
+            table_list.append(table)
+
+        for table in tables:
+            for order in booking:
+                if (table.table_id == order.table_id) and (table in table_list):
+                    table_list.remove(table)
+    return str(table_list)
+
+
+
+
 
 
 #

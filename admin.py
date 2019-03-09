@@ -62,6 +62,14 @@ class ImageAdminView(BaseModelView):
     pass
 
 
+class TablesAdminView(BaseModelView):
+    pass
+
+class BookingAdminView(BaseModelView):
+    pass
+
+
+
 class UsersAdminView(BaseModelView):
     form_columns = ['roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active']
     column_list = ('roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active')
