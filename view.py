@@ -214,6 +214,7 @@ def reg_user():
         session[json_data['email']] = '10000'
         if json_data['email'] in session:
             if str(json_data['code']) == str(session[json_data['email']]):
+                return jsonify({'code': 123, 'desc': "ALLRIGHT!"}), 123
                 user_exist = Users.query.filter(Users.email == str(json_data['email'])).first()
                 if user_exist:
                     return jsonify({'code': 123, 'desc': "OK when select from DB"}), 123
