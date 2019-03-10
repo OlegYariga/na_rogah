@@ -225,7 +225,7 @@ def reg_user():
             return jsonify({'code': 400, 'desc': "Error when codes compare with each other"}), 400
         return jsonify({'code': 400, 'desc': "Error in key 'email' + "+str(json_data['email'])+"  **********  "+str(session[json_data['email']])}), 400
     except KeyError:
-        return jsonify({'code': 400, 'desc': "Key Error"+str(json_data['email'])+"  **********  "+str(json_data['password'])+"  **********  "+str(json_data['name'])+"  **********  "+str(json_data['surname'])+"  **********  "+str(json_data['birthday'])+"  **********  "+str(json_data['phone'])+"  **********  "}), 400
+        return jsonify({'code': 400, 'desc': "Key Error"+str(json_data['email'])+"  **********  "+str(json_data['password'])+"  **********  "+str(json_data['name'])+"  **********  "+str(json_data['surname'])+"  **********  "+str(json_data['birthday'])+"  **********  "+str(json_data['phone'])+"  **********  "+str(json_data['code'])}), 400
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
