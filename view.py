@@ -223,7 +223,7 @@ def reg_user():
                     return jsonify({'code': 200, 'desc': "OK"}), 200
                 return jsonify({'code': 401, 'desc': "User already exists"}), 401
             return jsonify({'code': 400, 'desc': "Error when codes compare with each other"}), 400
-        return jsonify({'code': 400, 'desc': "Error in key 'email'"}), 400
+        return jsonify({'code': 400, 'desc': "Error in key 'email' + "+str(json_data['email'])+"  **********  "+str(session[json_data['email'])}), 400
     except KeyError:
         return jsonify({'code': 400, 'desc': "Key Error"}), 400
     except Exception:
