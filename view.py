@@ -222,7 +222,8 @@ def reg_user():
                     db.session.commit()
                     return jsonify({'code': 200, 'desc': "OK"}), 200
                 return jsonify({'code': 401, 'desc': "User already exists"}), 401
-        return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+            return jsonify({'code': 400, 'desc': "Error when codes compare with each other"}), 400
+        return jsonify({'code': 400, 'desc': "Error in key 'email'"}), 400
     except KeyError:
         return jsonify({'code': 400, 'desc': "Key Error"}), 400
     except Exception:
