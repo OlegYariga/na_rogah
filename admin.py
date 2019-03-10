@@ -63,7 +63,7 @@ class ImageAdminView(BaseModelView):
 
 
 class TablesAdminView(BaseModelView):
-    form_columns = ['table_id']
+    form_columns = ['table_id', 'chair_type', 'chair_count', 'position']
     pass
 
 
