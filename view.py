@@ -210,22 +210,28 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        #if json_data['email'] in session:
-        if True:
-            if (str(json_data['code']) == str(session[json_data['email']])) or (str(json_data['code'])=='10000'):
+        # ADD EMAIL FOR TESTING!!!
+        session[json_data['email']] = '10000'
+        if json_data['email'] in session:
+            if str(json_data['code']) == str(session[json_data['email']]):
                 user_exist = Users.query.filter(Users.email == json_data['email']).first()
+                if user_exist:
+                    return jsonify({'code': 123, 'desc': "OK when select from DB"}), 123
+                else:
+                    return jsonify({'code': 123, 'desc': "error when select from DB"}), 123
                 if not user_exist:
                     user = Users(email=json_data['email'], password=json_data['password'],
-                                 name=json_data['name'], surname=json_data['surname'], phone=json_data['phone'],
+                                 name=json_data['name'], surname=json_data['surname'],
+                                 birthday=json_data['birthday'], phone=json_data['phone'],
                                  active=False)
                     db.session.add(user)
                     db.session.commit()
                     return jsonify({'code': 200, 'desc': "OK"}), 200
                 return jsonify({'code': 401, 'desc': "User already exists"}), 401
             return jsonify({'code': 400, 'desc': "Error when codes compare with each other"}), 400
-        return jsonify({'code': 400, 'desc': "Error in key 'email' + "+str(json_data['email'])+"  **********  "+str(session[json_data['email']])}), 400
+        return jsonify({'code': 400, 'desc': "Error in key 'email'"}), 400
     except KeyError:
-        return jsonify({'code': 400, 'desc': "Key Error"+str(json_data['email'])+"  **********  "+str(json_data['password'])+"  **********  "+str(json_data['name'])+"  **********  "+str(json_data['surname'])+"  **********  "+str(json_data['birthday'])+"  **********  "+str(json_data['phone'])+"  **********  "+str(json_data['code'])}), 400
+        return jsonify({'code': 400, 'desc': "Key Error"}), 400
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
