@@ -211,7 +211,7 @@ def reg_user():
         data = request.data
         json_data = json.loads(data)
         # ADD EMAIL FOR TESTING!!!
-        session[json_data['email']] = '10000'
+        #session[json_data['email']] = '10000'
         if json_data['email'] in session:
             if str(json_data['code']) == str(session[json_data['email']]):
                 user_exist = Users.query.filter(Users.email == json_data['email']).first()
