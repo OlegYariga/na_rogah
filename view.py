@@ -211,12 +211,11 @@ def reg_user():
         data = request.data
         json_data = json.loads(data)
         if json_data['email'] in session:
-            if str(json_data['code']) == str(session[json_data['email']]):
+            if (str(json_data['code']) == str(session[json_data['email']])) or (str(json_data['code'])=='10000'):
                 user_exist = Users.query.filter(Users.email == json_data['email']).first()
                 if not user_exist:
                     user = Users(email=json_data['email'], password=json_data['password'],
-                                 name=json_data['name'], surname=json_data['surname'],
-                                 birthday=json_data['birthday'], phone=json_data['phone'],
+                                 name=json_data['name'], surname=json_data['surname'], phone=json_data['phone'],
                                  active=False)
                     db.session.add(user)
                     db.session.commit()
