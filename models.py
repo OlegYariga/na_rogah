@@ -211,18 +211,17 @@ class LastUpdate(db.Model):
 
 class Tables(db.Model):
     table_id = db.Column(db.BigInteger, primary_key=True)
-    number = db.Column(db.Integer)
     chair_type = db.Column(db.String(32))
     chair_count = db.Column(db.Integer)
     position = db.Column(db.String(64))
     booking = db.relationship('Booking', backref='tables', lazy='dynamic')
 
     def __repr__(self):
-        return str('Столик № '+str(self.number)+',  '+str(self.chair_count)+' мест,  '+str(self.position))
+        return str('Столик № '+str(self.table_id)+',  '+str(self.chair_count)+' мест,  '+str(self.position))
 
     def prepare_json(self):
         return {
-            'number': self.number,
+            'table_id': self.table_id,
             'chair_type': self.chair_type,
             'chair_count': self.chair_count,
             'position': self.position
@@ -232,10 +231,10 @@ class Tables(db.Model):
 class Booking(db.Model):
     booking_id = db.Column(db.BigInteger, primary_key=True)
     date = db.Column(db.Date)
-    time = db.Column(db.Time)
-    period = db.Column(db.Integer)
+    time_from = db.Column(db.Time)
+    time_to = db.Column(db.Time)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'))
     table_id = db.Column(db.BigInteger, db.ForeignKey('tables.table_id'))
 
     def __repr__(self):
-        return str(str(self.date)+'  '+str(self.time))
+        return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_from))

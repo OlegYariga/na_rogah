@@ -224,7 +224,7 @@ def reg_user():
                 return jsonify({'code': 401, 'desc': "User already exists"}), 401
         return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
     except KeyError:
-        return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+        return jsonify({'code': 400, 'desc': "Key Error"}), 400
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
@@ -248,31 +248,33 @@ def password_recovery():
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
-
+#### ИЗМЕНИТЬ!!!
 @app.route(def_route+'/reserved_places', methods=['POST'])
 def reserved_places():
     data = request.data
     json_data = json.loads(data)
-    if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
-        booking = Booking.query.filter(and_(json_data['date'] == Booking.date,
-                                            and_(Booking.time >= json_data['time_from'],
-                                            Booking.time <= json_data['time_to']))).all()
-        tables = Tables.query.all()
+    #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+    booking = Booking.query.filter(and_(json_data['date'] == Booking.date,
+                                        or_(Booking.time_from >= json_data['time_from'],
+                                        Booking.time_from <= json_data['time_to'],
+                                        Booking.time_to >= json_data['time_from'],
+                                        Booking.time_to <= json_data['time_to']))).all()
+    tables = Tables.query.all()
 
-        table_list = []
-        for table in tables:
-            table_list.append(table)
+    table_list = []
+    for table in tables:
+        table_list.append(table)
 
-        for table in tables:
-            for order in booking:
-                if (table.table_id == order.table_id) and (table in table_list):
-                    table_list.remove(table)
-        response_list = []
-        for l_table in table_list:
-            response_list.append(l_table.prepare_json())
+    for table in tables:
+        for order in booking:
+            if (table.table_id == order.table_id) and (table in table_list):
+                table_list.remove(table)
+    response_list = []
+    for l_table in table_list:
+        response_list.append(l_table.prepare_json())
 
-        #return str(table_list)
-        return jsonify({'data': response_list}), 200
+    #return str(table_list)
+    return jsonify({'data': response_list}), 200
     return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
 
 

@@ -63,6 +63,7 @@ class ImageAdminView(BaseModelView):
 
 
 class TablesAdminView(BaseModelView):
+    form_columns = ['table_id']
     pass
 
 
@@ -75,4 +76,4 @@ class UsersAdminView(BaseModelView):
     form_columns = ['roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active']
     column_list = ('roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active')
     can_create = False
-    can_delete = False
+    #can_delete = False
