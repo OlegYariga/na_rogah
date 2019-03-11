@@ -237,4 +237,4 @@ class Booking(db.Model):
     table_id = db.Column(db.BigInteger, db.ForeignKey('tables.table_id'))
 
     def __repr__(self):
-        return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_from))
+        return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_to))

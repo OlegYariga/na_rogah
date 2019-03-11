@@ -8,9 +8,10 @@
                 <table class="table" id="flights">
                     <thead>
                         <tr>
+                            <th scope="col">Идентификатор брони</th>
                             <th scope="col">Дата бронирования</th>
-                            <th scope="col">Время</th>
-                            <th scope="col">Продолжительность (часов)</th>
+                            <th scope="col">Время начала</th>
+                            <th scope="col">Время окончания</th>
                             <th scope="col">ID пользователя</th>
                             <th scope="col">ID столика</th>
                         </tr>
@@ -19,9 +20,10 @@
 
                     {% for flight in flights %}
                         <tr id={{ flight.booking_id }}>
+                            <th scope="row">{{ flight.booking_id}}</th>
                             <th scope="row">{{ flight.date }}</th>
-                            <td> {{flight.time }} </td>
-                            <td> {{ flight.period }} </td>
+                            <td> {{flight.time_from }} </td>
+                            <td> {{ flight.time_to }} </td>
                             <td> {{ flight.user_id }} </td>
                             <td> {{ flight.table_id }} </td>
                         </tr>
@@ -36,7 +38,7 @@
     setTimeout(function(){
     $('body, html').scrollTop($(document).height());
     location.reload();
-}, 30000);
+}, 10000);
 
 </script>
     {% endblock %}

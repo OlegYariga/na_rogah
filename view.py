@@ -251,34 +251,73 @@ def password_recovery():
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
-#### ИЗМЕНИТЬ!!!
+
+#### Протестировать!!!
 @app.route(def_route+'/reserved_places', methods=['POST'])
 def reserved_places():
-    data = request.data
-    json_data = json.loads(data)
-    #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
-    booking = Booking.query.filter(and_(json_data['date'] == Booking.date,
-                                        or_(Booking.time_from >= json_data['time_from'],
-                                        Booking.time_from <= json_data['time_to'],
-                                        Booking.time_to >= json_data['time_from'],
-                                        Booking.time_to <= json_data['time_to']))).all()
-    tables = Tables.query.all()
+    try:
+        data = request.data
+        json_data = json.loads(data)
+        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+            if datetime.strptime(json_data['time_from'], "%H:%M:%S") <= datetime.strptime(json_data['time_to'], "%H:%M:%S"):
+                booking = Booking.query.filter(and_(json_data['date'] == Booking.date,
+                                                    and_((
+                                                        or_(Booking.time_from >= json_data['time_from'],
+                                                            Booking.time_to >= json_data['time_from'])),
+                                                        or_(Booking.time_from <= json_data['time_to'],
+                                                            Booking.time_to <= json_data['time_to']))
+                                                    )).all()
+                tables = Tables.query.all()
 
-    table_list = []
-    for table in tables:
-        table_list.append(table)
+                table_list = []
+                for table in tables:
+                    table_list.append(table)
 
-    for table in tables:
-        for order in booking:
-            if (table.table_id == order.table_id) and (table in table_list):
-                table_list.remove(table)
-    response_list = []
-    for l_table in table_list:
-        response_list.append(l_table.prepare_json())
+                for table in tables:
+                    for order in booking:
+                        if (table.table_id == order.table_id) and (table in table_list):
+                            table_list.remove(table)
+                response_list = []
+                for l_table in table_list:
+                    response_list.append(l_table.prepare_json())
 
-    #return str(table_list)
-    return jsonify({'data': response_list}), 200
-    return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+                return jsonify({'data': response_list}), 200
+            return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
+        return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Key error"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error!"}), 500
+
+
+@app.route(def_route+'/reserve_place', methods=['POST'])
+def reserve_place():
+    try:
+        data = request.data
+        json_data = json.loads(data)
+        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+            is_booked = Booking.query.filter(and_(Booking.date == json_data['date'],
+                                                  Booking.time_from == json_data['time_from'],
+                                                  Booking.table_id == json_data['table_id'])).first()
+            user = Users.query.filter(Users.email == json_data['email']).first()
+            table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
+            if not is_booked:
+                if table_id:
+                    booking = Booking(date=json_data['date'],
+                                      time_from=json_data['time_from'],
+                                      time_to=json_data['time_to'],
+                                      user_id=user.id,
+                                      table_id=json_data['table_id'])
+                    db.session.add(booking)
+                    db.session.commit()
+                    return jsonify({'code': 200, 'desc': "OK"}), 200
+                return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
+            return jsonify({'code': 451, 'desc': "This time is booked"}), 451
+        return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Key error"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/reservation')
