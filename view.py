@@ -309,27 +309,29 @@ def reserve_place():
         ########################
 
         #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
-        forbidden = Booking.query.filter(and_(json_data['date'] == Booking.date, json_data['table_id']== Booking.table_id,
-                                            and_((
-                                                or_(Booking.time_from >= json_data['time_from'],
-                                                    Booking.time_to >= json_data['time_from'])),
-                                                or_(Booking.time_from <= json_data['time_to'],
-                                                    Booking.time_to <= json_data['time_to']))
-                                            )).all()
-        user = Users.query.filter(Users.email == json_data['email']).first()
-        table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
-        if not forbidden:
-            if table_id:
-                booking = Booking(date=json_data['date'],
-                                  time_from=json_data['time_from'],
-                                  time_to=json_data['time_to'],
-                                  user_id=user.id,
-                                  table_id=json_data['table_id'])
-                db.session.add(booking)
-                db.session.commit()
-                return jsonify({'code': 200, 'desc': "OK"}), 200
-            return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
-        return jsonify({'code': 451, 'desc': "This time is booked"}), 451
+        if datetime.strptime(json_data['time_from'], "%H:%M:%S") <= datetime.strptime(json_data['time_to'], "%H:%M:%S"):
+            forbidden = Booking.query.filter(and_(json_data['date'] == Booking.date, json_data['table_id']== Booking.table_id,
+                                                and_((
+                                                    or_(Booking.time_from >= json_data['time_from'],
+                                                        Booking.time_to >= json_data['time_from'])),
+                                                    or_(Booking.time_from <= json_data['time_to'],
+                                                        Booking.time_to <= json_data['time_to']))
+                                                )).all()
+            user = Users.query.filter(Users.email == json_data['email']).first()
+            table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
+            if not forbidden:
+                if table_id:
+                    booking = Booking(date=json_data['date'],
+                                      time_from=json_data['time_from'],
+                                      time_to=json_data['time_to'],
+                                      user_id=user.id,
+                                      table_id=json_data['table_id'])
+                    db.session.add(booking)
+                    db.session.commit()
+                    return jsonify({'code': 200, 'desc': "OK"}), 200
+                return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
+            return jsonify({'code': 451, 'desc': "This time is booked"}), 451
+        return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
         #return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except KeyError:
         return jsonify({'code': 400, 'desc': "Key error"}), 400
@@ -354,9 +356,21 @@ def index():
             if booking_ident:
                 order_table = Booking.query.filter(Booking.booking_id == booking_ident).first()
                 if order_table:
-                    order_table.accepted = True
-                    db.session.add(order_table)
-                    db.session.commit()
+                    if not order_table.accepted:
+                        order_table.accepted = True
+                        db.session.add(order_table)
+                        db.session.commit()
+                        user = Users.query.filter(Users.id == order_table.user_id).first()
+                        mail_to = user.email
+                        subject = "Ресторан 'На Рогах'"
+                        body = "Бронирование прошло успешно!\n " \
+                               "Номер Вашей брони - "+str(order_table.booking_id)+"\n " \
+                               "Стол № "+str(order_table.table_id)+"\n " \
+                               "Дата: "+str(order_table.date)+"\n " \
+                               "Время начала: "+str(order_table.time_from)+"\n " \
+                               "Время окончания: "+str(order_table.time_to)
+                        send_mail(mail_to, subject, body)
+
         if request.form['index'] == "1":
             booking_delete = request.form['booking_delete']
             if booking_delete:
@@ -385,6 +399,13 @@ def index():
 
     return render_template('index.html', flights=flights)
 
+
+def send_mail(mail_to, subject, text):
+    msg = Message()
+    msg.subject = subject
+    msg.recipients = [mail_to]
+    msg.body = text
+    mail.send(msg)
 
 #
 # ############ FUNCTIONS REQUERES MODIFICATION #######

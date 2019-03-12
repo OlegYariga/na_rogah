@@ -69,7 +69,7 @@ class TablesAdminView(BaseModelView):
 
 
 class BookingAdminView(BaseModelView):
-    form_columns = ['date', 'time_from', 'time_to', 'tables', 'accepted']
+    form_columns = ['date', 'time_from', 'time_to', 'users', 'tables', 'accepted']
     pass
 
 

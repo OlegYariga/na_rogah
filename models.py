@@ -59,9 +59,13 @@ class Users(db.Model, UserMixin):
     # For Flask-Security
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
     active = db.Column(db.Boolean(), default=False)
+    booking = db.relationship('Booking', backref='users', lazy='dynamic')
 
     def __init__(self, *args, **kwargs):
         super(Users, self).__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return str('email: '+str(self.email)+', '+str(self.name)+' тел: '+str(self.phone))
 
 
 # Stores user roles
