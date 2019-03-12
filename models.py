@@ -235,6 +235,7 @@ class Booking(db.Model):
     time_to = db.Column(db.Time)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'))
     table_id = db.Column(db.BigInteger, db.ForeignKey('tables.table_id'))
+    accepted = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_to))

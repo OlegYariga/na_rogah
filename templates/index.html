@@ -3,31 +3,58 @@
     {% extends 'base.html' %}
 
     {% block content %}
-        <div class="flight-container" style="overflow: none; max-height: 80vh">
-            <div class="table-responsive">
+<div class="five">
+    <a href="admin">ADMIN</a>
+    <a href="booking">Бронирование</a>
+    <a href="logout">Выйти</a>
+</div>
+        <div class="tbh" style="overflow: none; max-height: 80vh">
+            <div class="thh">
                 <table class="table" id="flights">
                     <thead>
                         <tr>
-                            <th scope="col">Идентификатор брони</th>
+                            <th scope="col">Подтверждение</th>
+                            <th scope="col">ID брони</th>
                             <th scope="col">Дата бронирования</th>
                             <th scope="col">Время начала</th>
                             <th scope="col">Время окончания</th>
-                            <th scope="col">ID пользователя</th>
-                            <th scope="col">ID столика</th>
+                            <th scope="col">№ столa</th>
+                            <th scope="col">Телефон</th>
+                            <th scope="col">Имя</th>
+                            <th scope="col">Удалить запись</th>
                         </tr>
                     </thead>
                     <tbody>
 
                     {% for flight in flights %}
                         <tr id={{ flight.booking_id }}>
+
+                            <td>
+                                <form action="" method="POST" name="data">
+                                    <input type="hidden" name="index" value="0">
+                                    <input type="hidden" name="buttonpressed"  value = {{flight.booking_id }}>
+                                    <button class = "accept">Подтвердить</button>
+                                </form>
+                            </td>
+
                             <th scope="row">{{ flight.booking_id}}</th>
                             <th scope="row">{{ flight.date }}</th>
                             <td> {{flight.time_from }} </td>
                             <td> {{ flight.time_to }} </td>
-                            <td> {{ flight.user_id }} </td>
                             <td> {{ flight.table_id }} </td>
+                            <td> {{flight.phone }} </td>
+                            <td> {{flight.user_name }} </td>
+
+                            <td>
+                                <form action="" method="POST" name="del">
+                                    <input type="hidden" name="index" value="1">
+                                    <input type="hidden" name="booking_delete"  value = {{flight.booking_id }}>
+                                    <button class="cancel">Удалить</button>
+                                </form>
+                            </td>
                         </tr>
                     {% endfor %}
+
                     </tbody>
                 </table>
             </div>
@@ -39,6 +66,9 @@
     $('body, html').scrollTop($(document).height());
     location.reload();
 }, 10000);
+window.onload = function(){
+    document.body.scrollTop = 9999;
+}
 
 </script>
     {% endblock %}

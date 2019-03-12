@@ -64,10 +64,12 @@ class ImageAdminView(BaseModelView):
 
 class TablesAdminView(BaseModelView):
     form_columns = ['table_id', 'chair_type', 'chair_count', 'position']
+    column_list = ['table_id', 'chair_type', 'chair_count', 'position']
     pass
 
 
 class BookingAdminView(BaseModelView):
+    form_columns = ['date', 'time_from', 'time_to', 'tables', 'accepted']
     pass
 
 

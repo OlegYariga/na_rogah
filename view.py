@@ -309,12 +309,16 @@ def reserve_place():
         ########################
 
         #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
-        is_booked = Booking.query.filter(and_(Booking.date == json_data['date'],
-                                              Booking.time_from == json_data['time_from'],
-                                              Booking.table_id == json_data['table_id'])).first()
+        forbidden = Booking.query.filter(and_(json_data['date'] == Booking.date, json_data['table_id']== Booking.table_id,
+                                            and_((
+                                                or_(Booking.time_from >= json_data['time_from'],
+                                                    Booking.time_to >= json_data['time_from'])),
+                                                or_(Booking.time_from <= json_data['time_to'],
+                                                    Booking.time_to <= json_data['time_to']))
+                                            )).all()
         user = Users.query.filter(Users.email == json_data['email']).first()
         table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
-        if not is_booked:
+        if not forbidden:
             if table_id:
                 booking = Booking(date=json_data['date'],
                                   time_from=json_data['time_from'],
@@ -339,11 +343,46 @@ def reservation():
     return render_template('index.html', flights=flights)
 
 
-@app.route(def_route+'/')
-@app.route("/")
+# НУЖНО ДОДЕЛАТЬ
+@app.route(def_route+'/', methods=['GET', 'POST'])
+@app.route("/", methods=['GET', 'POST'])
+@login_required
 def index():
+    if request.method == 'POST':
+        if request.form['index'] == "0":
+            booking_ident = request.form['buttonpressed']
+            if booking_ident:
+                order_table = Booking.query.filter(Booking.booking_id == booking_ident).first()
+                if order_table:
+                    order_table.accepted = True
+                    db.session.add(order_table)
+                    db.session.commit()
+        if request.form['index'] == "1":
+            booking_delete = request.form['booking_delete']
+            if booking_delete:
+                Booking.query.filter(Booking.booking_id == booking_delete).delete()
+                db.session.commit()
     # filter(Booking.date == datetime.now().date())
-    flights = Booking.query.all()
+    booking = Booking.query.filter(not_(Booking.accepted==True)).all()
+    flights_keys = {}
+    flights = []
+    for order in booking:
+        user = Users.query.filter(Users.id == order.user_id).first()
+        flights_keys['booking_id'] = order.booking_id
+        flights_keys['date'] = order.date
+        flights_keys['time_from'] = order.time_from
+        flights_keys['time_to'] = order.time_to
+        if user:
+            flights_keys['user_name'] = user.name
+            flights_keys['phone'] = user.phone
+        else:
+            flights_keys['user_name'] = "Нет данных"
+            flights_keys['phone'] = "Нет данных"
+        flights_keys['table_id'] = order.table_id
+
+        flights.append(flights_keys)
+        flights_keys = {}
+
     return render_template('index.html', flights=flights)
 
 
