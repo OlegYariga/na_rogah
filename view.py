@@ -252,21 +252,38 @@ def password_recovery():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-#### Протестировать!!!
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+# ### Протестировать!!!
 @app.route(def_route+'/empty_places', methods=['POST'])
 def empty_places():
     try:
         data = request.data
         json_data = json.loads(data)
         #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
-        if datetime.strptime(json_data['time_from'], "%H:%M:%S") <= datetime.strptime(json_data['time_to'], "%H:%M:%S"):
-            booking = Booking.query.filter(and_(json_data['date'] == Booking.date,
+        str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
+        str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
+        date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
+        date_time_to = datetime.strptime(str_date_time_to, "%Y-%m-%d %H:%M:%S")
+        if date_time_from <= date_time_to:
+            booking = Booking.query.filter(
                                                 and_((
-                                                    or_(Booking.time_from >= json_data['time_from'],
-                                                        Booking.time_to >= json_data['time_from'])),
-                                                    or_(Booking.time_from <= json_data['time_to'],
-                                                        Booking.time_to <= json_data['time_to']))
-                                                )).all()
+                                                    or_(Booking.date_time_from >= date_time_from,
+                                                        Booking.date_time_to >= date_time_from)),
+                                                    or_(Booking.date_time_from <= date_time_to,
+                                                        Booking.date_time_to <= date_time_to))
+                                                ).all()
             tables = Tables.query.all()
 
             table_list = []
@@ -309,21 +326,24 @@ def reserve_place():
         ########################
 
         #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
-        if datetime.strptime(json_data['time_from'], "%H:%M:%S") <= datetime.strptime(json_data['time_to'], "%H:%M:%S"):
-            forbidden = Booking.query.filter(and_(json_data['date'] == Booking.date, json_data['table_id']== Booking.table_id,
+        str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
+        str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
+        date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
+        date_time_to = datetime.strptime(str_date_time_to, "%Y-%m-%d %H:%M:%S")
+        if date_time_from <= date_time_to:
+            forbidden = Booking.query.filter(and_(json_data['table_id'] == Booking.table_id,
                                                 and_((
-                                                    or_(Booking.time_from >= json_data['time_from'],
-                                                        Booking.time_to >= json_data['time_from'])),
-                                                    or_(Booking.time_from <= json_data['time_to'],
-                                                        Booking.time_to <= json_data['time_to']))
+                                                    or_(Booking.date_time_from >= date_time_from,
+                                                        Booking.date_time_to >= date_time_from)),
+                                                    or_(Booking.date_time_from <= date_time_to,
+                                                        Booking.date_time_to <= date_time_to))
                                                 )).all()
             user = Users.query.filter(Users.email == json_data['email']).first()
             table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
             if not forbidden:
                 if table_id:
-                    booking = Booking(date=json_data['date'],
-                                      time_from=json_data['time_from'],
-                                      time_to=json_data['time_to'],
+                    booking = Booking(date_time_from=date_time_from,
+                                      date_time_to=date_time_to,
                                       user_id=user.id,
                                       table_id=json_data['table_id'])
                     db.session.add(booking)
@@ -355,8 +375,6 @@ def timetable():
         return jsonify({'data': timetable_list})
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
-
-
 
 
 # НУЖНО ДОДЕЛАТЬ

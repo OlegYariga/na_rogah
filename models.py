@@ -237,10 +237,16 @@ class Booking(db.Model):
     booking_id = db.Column(db.BigInteger, primary_key=True)
     date = db.Column(db.Date)
     time_from = db.Column(db.Time)
+    date_to = db.Column(db.Date)
     time_to = db.Column(db.Time)
+    date_time_from = db.Column(db.DateTime)
+    date_time_to = db.Column(db.DateTime)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'))
     table_id = db.Column(db.BigInteger, db.ForeignKey('tables.table_id'))
     accepted = db.Column(db.Boolean, default=False)
+
+    def before_commit(self):
+        self.date_time_from = datetime.strptime(str(self.date)+' '+str(self.time_from))
 
     def __repr__(self):
         return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_to))
