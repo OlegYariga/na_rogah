@@ -345,6 +345,20 @@ def reservation():
     return render_template('index.html', flights=flights)
 
 
+@app.route(def_route+'/timetable', methods=['GET'])
+def timetable():
+    try:
+        timetables = Timetable.query.order_by(Timetable.timetable_id).all()
+        timetable_list = []
+        for timetable_item in timetables:
+            timetable_list.append(timetable_item.prepare_json())
+        return jsonify({'data': timetable_list})
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+
+
 # НУЖНО ДОДЕЛАТЬ
 @app.route(def_route+'/', methods=['GET', 'POST'])
 @app.route("/", methods=['GET', 'POST'])

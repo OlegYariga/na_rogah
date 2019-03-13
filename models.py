@@ -248,7 +248,14 @@ class Booking(db.Model):
 
 class Timetable(db.Model):
     timetable_id = db.Column(db.BigInteger, primary_key=True)
-    week_day = db.Column(db.Enum('Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье',
-                                 name='enum'))
+    week_day = db.Column(db.Enum('пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс',
+                                 name='enum'), unique=True, nullable=False)
     time_from = db.Column(db.Time)
     time_to = db.Column(db.Time)
+
+    def prepare_json(self):
+        return {
+            'week_day': str(self.week_day),
+            'time_from': str(self.time_from),
+            'time_to': str(self.time_to)
+        }
