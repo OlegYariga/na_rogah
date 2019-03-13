@@ -246,9 +246,9 @@ class Booking(db.Model):
         return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_to))
 
 
-"""class Timetable(db.Model):
+class Timetable(db.Model):
     timetable_id = db.Column(db.BigInteger, primary_key=True)
     week_day = db.Column(db.Enum('Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье',
                                  name='enum'))
     time_from = db.Column(db.Time)
-    time_to = db.Column(db.Time)"""
+    time_to = db.Column(db.Time)
