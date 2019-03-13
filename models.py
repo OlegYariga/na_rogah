@@ -6,7 +6,8 @@ from datetime import datetime
 from flask import request, jsonify
 from werkzeug import secure_filename
 from flask_security import UserMixin, RoleMixin
-
+from sqlalchemy import Enum
+import enum
 from app import db
 from app import *
 
@@ -243,3 +244,11 @@ class Booking(db.Model):
 
     def __repr__(self):
         return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_to))
+
+
+"""class Timetable(db.Model):
+    timetable_id = db.Column(db.BigInteger, primary_key=True)
+    week_day = db.Column(db.Enum('Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье',
+                                 name='enum'))
+    time_from = db.Column(db.Time)
+    time_to = db.Column(db.Time)"""

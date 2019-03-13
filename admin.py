@@ -79,3 +79,7 @@ class UsersAdminView(BaseModelView):
     column_list = ('roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active')
     can_create = False
     #can_delete = False
+
+
+class TimetableAdminView(BaseModelView):
+    pass
