@@ -235,10 +235,6 @@ class Tables(db.Model):
 
 class Booking(db.Model):
     booking_id = db.Column(db.BigInteger, primary_key=True)
-    date = db.Column(db.Date)
-    time_from = db.Column(db.Time)
-    date_to = db.Column(db.Date)
-    time_to = db.Column(db.Time)
     date_time_from = db.Column(db.DateTime)
     date_time_to = db.Column(db.DateTime)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'))

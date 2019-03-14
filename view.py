@@ -398,9 +398,8 @@ def index():
                         body = "Бронирование прошло успешно!\n " \
                                "Номер Вашей брони - "+str(order_table.booking_id)+"\n " \
                                "Стол № "+str(order_table.table_id)+"\n " \
-                               "Дата: "+str(order_table.date)+"\n " \
-                               "Время начала: "+str(order_table.time_from)+"\n " \
-                               "Время окончания: "+str(order_table.time_to)
+                               "Дата и время начала: "+str(order_table.date_time_from)+"\n " \
+                               "Дата и время окончания: "+str(order_table.date_time_to)
                         send_mail(mail_to, subject, body)
 
         if request.form['index'] == "1":
@@ -415,9 +414,8 @@ def index():
     for order in booking:
         user = Users.query.filter(Users.id == order.user_id).first()
         flights_keys['booking_id'] = order.booking_id
-        flights_keys['date'] = order.date
-        flights_keys['time_from'] = order.time_from
-        flights_keys['time_to'] = order.time_to
+        flights_keys['date_time_from'] = order.date_time_from
+        flights_keys['date_time_to'] = order.date_time_to
         if user:
             flights_keys['user_name'] = user.name
             flights_keys['phone'] = user.phone
