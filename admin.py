@@ -16,15 +16,7 @@ class AdminMixin:
 
 # Create class our AdminView
 class BaseModelView(AdminMixin, ModelView):
-    # When change any model in admin panel
-    def on_model_change(self, form, model, is_created):
-        # Call function, which refreshes db-update date
-        image = LastUpdate().update_db()
-
-    # When delete ange any model in admin panel
-    def on_model_delete(self, model):
-        # Call function, which refreshes db-update date
-        image = LastUpdate().update_db()
+    pass
 
 
 # Class get access for admin index page
@@ -39,23 +31,32 @@ class MenuAdminView(BaseModelView):
         'file': FileField('File')
     }
     # Add necessary fields ( because we need to hide 'photo' field
-    form_columns = ['photo','Category', 'name', 'price', 'desc_short', 'desc_long', 'weight',
+    form_columns = ['Category', 'name', 'price', 'desc_short', 'desc_long', 'weight',
                     'recommended', 'file', 'delivery']
-
 
     # Upload image to DB after model changed
     def after_model_change(self, form, model, is_created):
         model.load_image()
+        # Update LastUpdate in Db
+        LastUpdate().update_db()
         return super(MenuAdminView, self).on_model_change(form, model, is_created)
 
     # Delete all images, connected with current model
     def on_model_delete(self, model):
         model.delete_image()
+        # Update LastUpdate in Db
+        LastUpdate().update_db()
         return super(MenuAdminView, self).on_model_delete(model)
 
 
 class CategoryAdminView(BaseModelView):
-    pass
+    def after_model_change(self, form, model, is_created):
+        LastUpdate().update_db()
+        return super(CategoryAdminView, self).after_model_change(form, model, is_created)
+
+    def on_model_delete(self, model):
+        LastUpdate().update_db()
+        return super(CategoryAdminView, self).on_model_delete(model)
 
 
 class ImageAdminView(BaseModelView):
@@ -73,7 +74,6 @@ class BookingAdminView(BaseModelView):
     pass
 
 
-
 class UsersAdminView(BaseModelView):
     form_columns = ['roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active']
     column_list = ('roles', 'email', 'name', 'surname', 'birthday', 'phone', 'active')
@@ -82,4 +82,10 @@ class UsersAdminView(BaseModelView):
 
 
 class TimetableAdminView(BaseModelView):
-    pass
+    def after_model_change(self, form, model, is_created):
+        TimeTableUpdate().update_db()
+        return super(TimetableAdminView, self).after_model_change(form, model, is_created)
+
+    def on_model_delete(self, model):
+        TimeTableUpdate().update_db()
+        return super(TimetableAdminView, self).on_model_delete(model)

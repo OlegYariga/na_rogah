@@ -214,6 +214,30 @@ class LastUpdate(db.Model):
             return str("")
 
 
+# Class stores datetime of last changing timtable NaRogah
+class TimeTableUpdate(db.Model):
+    time_table_update_id = db.Column(db.BigInteger, primary_key=True)
+    log_date_time = db.Column(db.DateTime)
+
+    def update_db(self):
+        last_date = self.query.first()
+        if last_date:
+            last_date.log_date_time = datetime.now()
+            db.session.add(last_date)
+            db.session.commit()
+        else:
+            self.log_date_time = datetime.now()
+            db.session.add(self)
+            db.session.commit()
+
+    def check_update(self):
+        last_date = self.query.first()
+        if last_date:
+            return str(last_date.log_date_time)
+        else:
+            return str("")
+
+
 class Tables(db.Model):
     table_id = db.Column(db.BigInteger, primary_key=True)
     chair_type = db.Column(db.String(32))

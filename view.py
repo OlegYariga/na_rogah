@@ -19,6 +19,7 @@ from app import mail
 # Load APPLICATION_ROOT from config
 def_route = '/api/v1'
 
+
 # Make session permanent with lifetime=1 before request
 @app.before_request
 def make_session_permanent():
@@ -153,10 +154,33 @@ def check_update():
         # Call function of class LastUpdate
         update = LastUpdate().check_update()
         menu_count = Menu.query.count()
-        result = jsonify({'date': update, 'count': menu_count})
+        # Select date of last TimeTable update
+        timetable_update = TimeTableUpdate().check_update()
+        result = jsonify({'date': update, 'count': menu_count, 'timetable_update': timetable_update})
         return result
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+# Returns timetable of NaRogah
+@app.route(def_route+'/timetable', methods=['GET'])
+def timetable():
+    try:
+        # Select all timetables and sort them by ID
+        timetables = Timetable.query.order_by(Timetable.timetable_id).all()
+        timetable_list = []
+        for timetable_item in timetables:
+            # Turn items to JSON
+            timetable_list.append(timetable_item.prepare_json())
+        return jsonify({'data': timetable_list})
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+# POST methods
 
 
 # User authorization with create session
@@ -184,18 +208,22 @@ def authorize():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
+# Method to verify email
 @app.route(def_route+'/verify_email', methods=['POST'])
 def verify_email():
     try:
         # Get data and convert them to JSON (ONLY email)
         data = request.data
         json_data = json.loads(data)
+        # Generate unique 5-signs numeric code
         code = str(randint(10000, 99999))
-        msg = Message()
-        msg.subject = 'Na-Rogah verify e-mail'
-        msg.recipients = [json_data['email']]
-        msg.body = 'Добро пожаловать в ресторан "На Рогах"! Ваш код подтверждения - ' + code
-        mail.send(msg)
+        # Create service headers and message body
+        subject = "'На Рогах' подтверждение E-mail"
+        recipient = json_data['email']
+        body = 'Добро пожаловать в ресторан "На Рогах"! Ваш код подтверждения - ' + code
+        # Send mail
+        send_mail(recipient, subject, body)
+        # Created session with key <email> and value <code>
         session[str(json_data['email'])] = str(code)
         return jsonify({'code': 200, 'desc': "Email was sent"}), 200
     except KeyError:
@@ -210,16 +238,19 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        # ADD EMAIL FOR TESTING!!!
-        #session[json_data['email']] = '10000'
+        # If user is in session
         if json_data['email'] in session:
+            # If code from email is correct
             if str(json_data['code']) == str(session[json_data['email']]):
                 user_exist = Users.query.filter(Users.email == json_data['email']).first()
+                # If there's such user in DB
                 if not user_exist:
+                    # Create user with recieved data
                     user = Users(email=json_data['email'], password=json_data['password'],
                                  name=json_data['name'], surname=json_data['surname'],
                                  birthday=json_data['birthday'], phone=json_data['phone'],
                                  active=False)
+                    # Add user to DB
                     db.session.add(user)
                     db.session.commit()
                     return jsonify({'code': 200, 'desc': "OK"}), 200
@@ -235,12 +266,18 @@ def reg_user():
 @app.route(def_route+'/password_recovery', methods=['POST'])
 def password_recovery():
     try:
+        # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
+        # If user is in session
         if json_data['email'] in session:
+            # If user was registered
             user_recovery = Users.query.filter(Users.email == json_data['email']).first()
+            # If code from email is correct and suxh user exists
             if str(json_data['code']) == str(session[json_data['email']]) and user_recovery:
+                # Update password of a user with new password
                 user_recovery.password = json_data['password']
+                # Change record in DB
                 db.session.add(user_recovery)
                 db.session.commit()
                 return jsonify({'code': 200, 'desc': "OK"}), 200
@@ -252,23 +289,11 @@ def password_recovery():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-# ### Протестировать!!!
+# This view shows empty tables in chosen date-time interval
 @app.route(def_route+'/empty_places', methods=['POST'])
 def empty_places():
     try:
+        # Get data and convert into JSON (date_from, time_from, date_to, Time_to)
         data = request.data
         json_data = json.loads(data)
         #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
@@ -300,9 +325,9 @@ def empty_places():
 
             return jsonify({'data': response_list}), 200
         return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
-        #return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+        #return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except KeyError:
-        return jsonify({'code': 400, 'desc': "Key error"}), 400
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key error"}), 406
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error!"}), 500
 
@@ -354,45 +379,36 @@ def reserve_place():
         return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
         #return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except KeyError:
-        return jsonify({'code': 400, 'desc': "Key error"}), 400
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key error"}), 406
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-@app.route(def_route+'/reservation')
-def reservation():
-    flights = Booking.query.all()
-    return render_template('index.html', flights=flights)
-
-
-@app.route(def_route+'/timetable', methods=['GET'])
-def timetable():
-    try:
-        timetables = Timetable.query.order_by(Timetable.timetable_id).all()
-        timetable_list = []
-        for timetable_item in timetables:
-            timetable_list.append(timetable_item.prepare_json())
-        return jsonify({'data': timetable_list})
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
-
-
-# НУЖНО ДОДЕЛАТЬ
+# View function for custom admin
 @app.route(def_route+'/', methods=['GET', 'POST'])
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
+    # If something was POSTed
     if request.method == 'POST':
+        # If button "Accept" was pressed
         if request.form['index'] == "0":
+            # Select id of record, where button was pressed
             booking_ident = request.form['buttonpressed']
             if booking_ident:
+                # Select record of booking with such ID
                 order_table = Booking.query.filter(Booking.booking_id == booking_ident).first()
+                # If record exists
                 if order_table:
+                    # If record was not accepted yet
                     if not order_table.accepted:
+                        # Change status to "Accepted" and deploy changes to DB
                         order_table.accepted = True
                         db.session.add(order_table)
                         db.session.commit()
+                        # Select email of user, created booking
                         user = Users.query.filter(Users.id == order_table.user_id).first()
+                        # Create service headers
                         mail_to = user.email
                         subject = "Ресторан 'На Рогах'"
                         body = "Бронирование прошло успешно!\n " \
@@ -400,19 +416,25 @@ def index():
                                "Стол № "+str(order_table.table_id)+"\n " \
                                "Дата и время начала: "+str(order_table.date_time_from)+"\n " \
                                "Дата и время окончания: "+str(order_table.date_time_to)
+                        # Send email
                         send_mail(mail_to, subject, body)
-
+        # If was pressed 'delete' button
         if request.form['index'] == "1":
+            # Select id of record, where button was pressed
             booking_delete = request.form['booking_delete']
             if booking_delete:
+                # Delete such record from DB. If there's no records - do nothing
                 Booking.query.filter(Booking.booking_id == booking_delete).delete()
                 db.session.commit()
-    # filter(Booking.date == datetime.now().date())
-    booking = Booking.query.filter(not_(Booking.accepted==True)).all()
+    # MAIN PART
+    # Select not-accepted booking records from DB
+    booking = Booking.query.filter(not_(Booking.accepted == True)).all()
     flights_keys = {}
     flights = []
     for order in booking:
+        # Select users in every booking item (order)
         user = Users.query.filter(Users.id == order.user_id).first()
+        # Fill th dictionary with booking and user data
         flights_keys['booking_id'] = order.booking_id
         flights_keys['date_time_from'] = order.date_time_from
         flights_keys['date_time_to'] = order.date_time_to
@@ -423,19 +445,28 @@ def index():
             flights_keys['user_name'] = "Нет данных"
             flights_keys['phone'] = "Нет данных"
         flights_keys['table_id'] = order.table_id
-
+        # Append list with the dictionary and clear dictionary
         flights.append(flights_keys)
         flights_keys = {}
-
+    # Create view page with data
     return render_template('index.html', flights=flights)
 
 
+# Function to send email
 def send_mail(mail_to, subject, text):
-    msg = Message()
-    msg.subject = subject
-    msg.recipients = [mail_to]
-    msg.body = text
-    mail.send(msg)
+    try:
+        # Try to send message to user
+        msg = Message()
+        msg.subject = subject
+        msg.recipients = [mail_to]
+        msg.body = text
+        mail.send(msg)
+        return True
+    # If in email was detected not-ascii symbols
+    except UnicodeEncodeError:
+        return False
+    except Exception:
+        return False
 
 #
 # ############ FUNCTIONS REQUERES MODIFICATION #######
