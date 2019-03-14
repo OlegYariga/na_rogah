@@ -411,11 +411,26 @@ def index():
                         # Create service headers
                         mail_to = user.email
                         subject = "Ресторан 'На Рогах'"
-                        body = "Бронирование прошло успешно!\n " \
-                               "Номер Вашей брони - "+str(order_table.booking_id)+"\n " \
-                               "Стол № "+str(order_table.table_id)+"\n " \
-                               "Дата и время начала: "+str(order_table.date_time_from)+"\n " \
-                               "Дата и время окончания: "+str(order_table.date_time_to)
+                        # Select user's name
+                        user_name = user.name
+                        if not user_name:
+                            # If there's no name, create generalized greeting
+                            name = str("мы рады, что Вы пользуетесь нашим приложением")
+                        else:
+                            # Else, convert name to string
+                            name = str(user_name)
+                        # Select data, identifier, table's number, time_from and time_to
+                        ident = str(order_table.booking_id)
+                        num = str(order_table.table_id)
+                        b_date = str(order_table.date_time_from.strftime('%d.%m.%Y'))
+                        b_time_from = str(order_table.date_time_from.strftime('%H:%M'))
+                        b_time_to = str(order_table.date_time_to.strftime('%H:%M'))
+                        # Insert data to message body in HTML
+                        body = """
+                        <h1><b>Здравствуйте, """+name+"""!</b></h1>
+                        <p>Вы успешно забронировали стол <b>№ """+num+"""</b> на <b>"""+b_date+"""</b> с <b>"""+b_time_from+"""</b> до <b>"""+b_time_to+"""</b>. Идентификатор Вашей брони - <b>"""+ident+"""</b></p>
+                        <p>Мы с радостью ждем Вас в гости!</p>
+                        """
                         # Send email
                         send_mail(mail_to, subject, body)
         # If was pressed 'delete' button
@@ -459,7 +474,7 @@ def send_mail(mail_to, subject, text):
         msg = Message()
         msg.subject = subject
         msg.recipients = [mail_to]
-        msg.body = text
+        msg.html = text
         mail.send(msg)
         return True
     # If in email was detected not-ascii symbols
