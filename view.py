@@ -489,27 +489,6 @@ def send_mail(mail_to, subject, text):
 # I NEED TO CHANGE IT A LITTLE BIT
 
 
-@app.route(def_route+'/hi', methods=['GET', 'POST'])
-def hi():
-    msg = Message(subject='Helo!', recipients=['yarigaoleg@mail.ru'], body='We need to helo U')
-    mail.send(msg)
-    uuidstr = str(uuid.uuid4())[1:8]
-    return uuidstr
-
-
-# TEST METHOD - error responses
-@app.route(def_route+'/get_wrong/<i_id>', methods=['GET', 'POST'])
-def get_wrong(i_id):
-    if i_id == '200':
-        return jsonify({'code': 200, 'desc': "OK"}), 200
-    if i_id == '400':
-        return jsonify({'code': 400, 'desc': "Bad request"}), 400
-    if i_id == '415':
-        return jsonify({'code': 415, 'desc': "Unsupported Media Type"}), 415
-    if i_id == '500':
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
-
-
 # Checks correct session data
 def log_required(login, unique):
     if login in session:
