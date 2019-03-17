@@ -327,7 +327,9 @@ def empty_places():
         return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
         #return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except KeyError:
-        return jsonify({'code': 406, 'desc': "Not acceptable - Key error"}), 406
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except ValueError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error!"}), 500
 
@@ -351,35 +353,39 @@ def reserve_place():
         ########################
 
         #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
-        str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
-        str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
-        date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
-        date_time_to = datetime.strptime(str_date_time_to, "%Y-%m-%d %H:%M:%S")
-        if date_time_from <= date_time_to:
-            forbidden = Booking.query.filter(and_(json_data['table_id'] == Booking.table_id,
-                                                and_((
-                                                    or_(Booking.date_time_from >= date_time_from,
-                                                        Booking.date_time_to >= date_time_from)),
-                                                    or_(Booking.date_time_from <= date_time_to,
-                                                        Booking.date_time_to <= date_time_to))
-                                                )).all()
-            user = Users.query.filter(Users.email == json_data['email']).first()
-            table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
-            if not forbidden:
-                if table_id:
-                    booking = Booking(date_time_from=date_time_from,
-                                      date_time_to=date_time_to,
-                                      user_id=user.id,
-                                      table_id=json_data['table_id'])
-                    db.session.add(booking)
-                    db.session.commit()
-                    return jsonify({'code': 200, 'desc': "OK"}), 200
-                return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
-            return jsonify({'code': 451, 'desc': "This time is booked"}), 451
-        return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
+        if not json_data['email'] == "":
+            str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
+            str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
+            date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
+            date_time_to = datetime.strptime(str_date_time_to, "%Y-%m-%d %H:%M:%S")
+            if date_time_from <= date_time_to:
+                forbidden = Booking.query.filter(and_(json_data['table_id'] == Booking.table_id,
+                                                    and_((
+                                                        or_(Booking.date_time_from >= date_time_from,
+                                                            Booking.date_time_to >= date_time_from)),
+                                                        or_(Booking.date_time_from <= date_time_to,
+                                                            Booking.date_time_to <= date_time_to))
+                                                    )).all()
+                user = Users.query.filter(Users.email == json_data['email']).first()
+                table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
+                if not forbidden:
+                    if table_id:
+                        booking = Booking(date_time_from=date_time_from,
+                                          date_time_to=date_time_to,
+                                          user_id=user.id,
+                                          table_id=json_data['table_id'])
+                        db.session.add(booking)
+                        db.session.commit()
+                        return jsonify({'code': 200, 'desc': "OK"}), 200
+                    return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
+                return jsonify({'code': 451, 'desc': "This time is booked"}), 451
+            return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
+        return jsonify({'code': 420, 'desc': "Email is empty"}), 420
         #return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except KeyError:
-        return jsonify({'code': 406, 'desc': "Not acceptable - Key error"}), 406
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except ValueError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
@@ -389,82 +395,87 @@ def reserve_place():
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
-    # If something was POSTed
-    if request.method == 'POST':
-        # If button "Accept" was pressed
-        if request.form['index'] == "0":
-            # Select id of record, where button was pressed
-            booking_ident = request.form['buttonpressed']
-            if booking_ident:
-                # Select record of booking with such ID
-                order_table = Booking.query.filter(Booking.booking_id == booking_ident).first()
-                # If record exists
-                if order_table:
-                    # If record was not accepted yet
-                    if not order_table.accepted:
-                        # Change status to "Accepted" and deploy changes to DB
-                        order_table.accepted = True
-                        db.session.add(order_table)
-                        db.session.commit()
-                        # Select email of user, created booking
-                        user = Users.query.filter(Users.id == order_table.user_id).first()
-                        # Create service headers
-                        mail_to = user.email
-                        subject = "Ресторан 'На Рогах'"
-                        # Select user's name
-                        user_name = user.name
-                        if not user_name:
-                            # If there's no name, create generalized greeting
-                            name = str("мы рады, что Вы пользуетесь нашим приложением")
-                        else:
-                            # Else, convert name to string
-                            name = str(user_name)
-                        # Select data, identifier, table's number, time_from and time_to
-                        ident = str(order_table.booking_id)
-                        num = str(order_table.table_id)
-                        b_date = str(order_table.date_time_from.strftime('%d.%m.%Y'))
-                        b_time_from = str(order_table.date_time_from.strftime('%H:%M'))
-                        b_time_to = str(order_table.date_time_to.strftime('%H:%M'))
-                        # Insert data to message body in HTML
-                        body = """
-                        <h1><b>Здравствуйте, """+name+"""!</b></h1>
-                        <p>Вы успешно забронировали стол <b>№ """+num+"""</b> на <b>"""+b_date+"""</b> с <b>"""+b_time_from+"""</b> до <b>"""+b_time_to+"""</b>. Идентификатор Вашей брони - <b>"""+ident+"""</b></p>
-                        <p>Мы с радостью ждем Вас в гости!</p>
-                        """
-                        # Send email
-                        send_mail(mail_to, subject, body)
-        # If was pressed 'delete' button
-        if request.form['index'] == "1":
-            # Select id of record, where button was pressed
-            booking_delete = request.form['booking_delete']
-            if booking_delete:
-                # Delete such record from DB. If there's no records - do nothing
-                Booking.query.filter(Booking.booking_id == booking_delete).delete()
-                db.session.commit()
-    # MAIN PART
-    # Select not-accepted booking records from DB
-    booking = Booking.query.filter(not_(Booking.accepted == True)).all()
-    flights_keys = {}
-    flights = []
-    for order in booking:
-        # Select users in every booking item (order)
-        user = Users.query.filter(Users.id == order.user_id).first()
-        # Fill th dictionary with booking and user data
-        flights_keys['booking_id'] = order.booking_id
-        flights_keys['date_time_from'] = order.date_time_from
-        flights_keys['date_time_to'] = order.date_time_to
-        if user:
-            flights_keys['user_name'] = user.name
-            flights_keys['phone'] = user.phone
-        else:
-            flights_keys['user_name'] = "Нет данных"
-            flights_keys['phone'] = "Нет данных"
-        flights_keys['table_id'] = order.table_id
-        # Append list with the dictionary and clear dictionary
-        flights.append(flights_keys)
+    try:
+        # If something was POSTed
+        if request.method == 'POST':
+            # If button "Accept" was pressed
+            if request.form['index'] == "0":
+                # Select id of record, where button was pressed
+                booking_ident = request.form['buttonpressed']
+                if booking_ident:
+                    # Select record of booking with such ID
+                    order_table = Booking.query.filter(Booking.booking_id == booking_ident).first()
+                    # If record exists
+                    if order_table:
+                        # If record was not accepted yet
+                        if not order_table.accepted:
+                            # Change status to "Accepted" and deploy changes to DB
+                            order_table.accepted = True
+                            db.session.add(order_table)
+                            db.session.commit()
+                            # Select email of user, created booking
+                            user = Users.query.filter(Users.id == order_table.user_id).first()
+                            # Create service headers
+                            mail_to = user.email
+                            subject = "Ресторан 'На Рогах'"
+                            # Select user's name
+                            user_name = user.name
+                            if not user_name:
+                                # If there's no name, create generalized greeting
+                                name = str("мы рады, что Вы пользуетесь нашим приложением")
+                            else:
+                                # Else, convert name to string
+                                name = str(user_name)
+                            # Select data, identifier, table's number, time_from and time_to
+                            ident = str(order_table.booking_id)
+                            num = str(order_table.table_id)
+                            b_date = str(order_table.date_time_from.strftime('%d.%m.%Y'))
+                            b_time_from = str(order_table.date_time_from.strftime('%H:%M'))
+                            b_time_to = str(order_table.date_time_to.strftime('%H:%M'))
+                            # Insert data to message body in HTML
+                            body = """
+                            <h1><b>Здравствуйте, """+name+"""!</b></h1>
+                            <p>Вы успешно забронировали стол <b>№ """+num+"""</b> на <b>"""+b_date+"""</b> с <b>"""+b_time_from+"""</b> до <b>"""+b_time_to+"""</b>. Идентификатор Вашей брони - <b>"""+ident+"""</b></p>
+                            <p>Мы с радостью ждем Вас в гости!</p>
+                            """
+                            # Send email
+                            send_mail(mail_to, subject, body)
+            # If was pressed 'delete' button
+            if request.form['index'] == "1":
+                # Select id of record, where button was pressed
+                booking_delete = request.form['booking_delete']
+                if booking_delete:
+                    # Delete such record from DB. If there's no records - do nothing
+                    Booking.query.filter(Booking.booking_id == booking_delete).delete()
+                    db.session.commit()
+        # MAIN PART
+        # Select not-accepted booking records from DB
+        booking = Booking.query.filter(not_(Booking.accepted == True)).all()
         flights_keys = {}
-    # Create view page with data
-    return render_template('index.html', flights=flights)
+        flights = []
+        for order in booking:
+            # Select users in every booking item (order)
+            user = Users.query.filter(Users.id == order.user_id).first()
+            # Fill th dictionary with booking and user data
+            flights_keys['booking_id'] = order.booking_id
+            flights_keys['date_time_from'] = order.date_time_from
+            flights_keys['date_time_to'] = order.date_time_to
+            if user:
+                flights_keys['user_name'] = user.name
+                flights_keys['phone'] = user.phone
+            else:
+                flights_keys['user_name'] = "Нет данных"
+                flights_keys['phone'] = "Нет данных"
+            flights_keys['table_id'] = order.table_id
+            # Append list with the dictionary and clear dictionary
+            flights.append(flights_keys)
+            flights_keys = {}
+        # Create view page with data
+        return render_template('index.html', flights=flights)
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 # Function to send email

@@ -34,6 +34,11 @@ class MenuAdminView(BaseModelView):
     form_columns = ['Category', 'name', 'price', 'desc_short', 'desc_long', 'weight',
                     'recommended', 'file', 'delivery']
 
+    def on_model_change(self, form, model, is_created):
+        item_name = request.form['name']
+        model.name = item_name.capitalize()
+        return super(MenuAdminView, self).on_model_change(form, model, is_created)
+
     # Upload image to DB after model changed
     def after_model_change(self, form, model, is_created):
         model.load_image()
@@ -50,6 +55,11 @@ class MenuAdminView(BaseModelView):
 
 
 class CategoryAdminView(BaseModelView):
+    def on_model_change(self, form, model, is_created):
+        class_name = request.form['name']
+        model.name = class_name.upper()
+        return super(CategoryAdminView, self).on_model_change(form, model, is_created)
+
     def after_model_change(self, form, model, is_created):
         LastUpdate().update_db()
         return super(CategoryAdminView, self).after_model_change(form, model, is_created)
