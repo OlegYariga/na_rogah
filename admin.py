@@ -33,6 +33,8 @@ class MenuAdminView(BaseModelView):
     # Add necessary fields ( because we need to hide 'photo' field
     form_columns = ['Category', 'name', 'price', 'desc_short', 'desc_long', 'weight',
                     'recommended', 'file', 'delivery']
+    column_list = ['item_id', 'name', 'price', 'desc_short', 'desc_long', 'weight',
+                    'recommended', 'photo', 'delivery', 'Category']
 
     def on_model_change(self, form, model, is_created):
         item_name = request.form['name']
