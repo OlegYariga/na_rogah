@@ -269,7 +269,7 @@ class Booking(db.Model):
         self.date_time_from = datetime.strptime(str(self.date)+' '+str(self.time_from))
 
     def __repr__(self):
-        return str(str(self.date)+'  '+str(self.time_from)+' - '+str(self.time_to))
+        return str(str(self.date_time_from)+'  '+str(self.date_time_to)+' - '+str(self.booking_id))
 
 
 class Timetable(db.Model):

@@ -42,14 +42,14 @@ from admin import *
 
 # Create admin panel
 admin = Admin(app, 'Na Rogah', url='/', index_view=HomeAdminView(name='Home'))
-admin.add_view(TimetableAdminView(Timetable, db.session))
-admin.add_view(TablesAdminView(Tables, db.session))
-admin.add_view(CategoryAdminView(Category, db.session))
-admin.add_view(MenuAdminView(Menu, db.session))
-admin.add_view(UsersAdminView(Users, db.session))
-admin.add_view(BookingAdminView(Booking, db.session))
+admin.add_view(TimetableAdminView(Timetable, db.session, name='Расписание работы'))
+admin.add_view(TablesAdminView(Tables, db.session, name='Столы'))
+admin.add_view(CategoryAdminView(Category, db.session, name='Категории'))
+admin.add_view(MenuAdminView(Menu, db.session, name='Меню'))
+admin.add_view(UsersAdminView(Users, db.session, name='Пользователи'))
+admin.add_view(BookingAdminView(Booking, db.session, name='Бронирование'))
 #logout link
-admin.add_link(MenuLink(name='Logout', category='', url="/logout"))
+admin.add_link(MenuLink(name='Выйти', category='', url="/logout"))
 
 # FLASK-SECURITY
 user_datastore = SQLAlchemyUserDatastore(db, Users, Role)
