@@ -247,16 +247,22 @@ def reg_user():
                 if not user_exist:
                     # Create user with recieved data
                     user = Users(email=json_data['email'], password=json_data['password'],
-                                 name=json_data['name'], surname=json_data['surname'],
-                                 birthday=json_data['birthday'], phone=json_data['phone'],
+                                 name=json_data['name'], phone=json_data['phone'],
                                  active=False)
                     # Add user to DB
                     db.session.add(user)
                     db.session.commit()
-                    return jsonify({'code': 200, 'desc': "OK"}), 200
+                    if user:
+                        # Generate unique identifier
+                        unique = str(uuid.uuid4())
+                        # Create new session with key <login> and unique value
+                        session[str(user.email)] = unique
+                        # Create a response
+                        return jsonify({'code': 200, 'desc': "OK",
+                                        'email': str(user.email), 'uuid': unique}), 200
                 return jsonify({'code': 401, 'desc': "User already exists"}), 401
             return jsonify({'code': 400, 'desc': "Error when codes compare with each other"}), 400
-        return jsonify({'code': 400, 'desc': "Error in key 'email'"}), 400
+        return jsonify({'code': 400, 'desc': "Error in key 'email' or code incorrect"}), 400
     except KeyError:
         return jsonify({'code': 400, 'desc': "Key Error"}), 400
     except Exception:
@@ -285,6 +291,25 @@ def password_recovery():
         return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
     except KeyError:
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+# Check if user is authorized
+@app.route(def_route+'/check_auth', methods=['POST'])
+def check_auth():
+    try:
+        # Get data and turn them to json
+        data = request.data
+        json_data = json.loads(data)
+        # Check if user is in sesion and code is correct
+        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+            return jsonify({'code': 200, 'desc': "OK"}), 200
+        return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+    except ValueError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
@@ -390,6 +415,55 @@ def reserve_place():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
+@app.route(def_route+'/show_user_booking', methods=['POST'])
+def show_user_booking():
+    try:
+        data = request.data
+        json_data = json.loads(data)
+        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+            user = Users.query.filter(Users.email == str(json_data['email'])).first()
+            if user:
+                bookings = Booking.query.filter(Booking.user_id == user.id).order_by(Booking.date_time_from).all()
+                booking_list = []
+                for booking in bookings:
+                    booking_list.append(booking.prepare_json())
+                return jsonify({'bookings': booking_list}), 200
+            return jsonify({'code': 404, 'desc': "User not found"}), 404
+        return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except ValueError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+@app.route(def_route+'/delete_user_booking', methods=['POST'])
+def delete_user_booking():
+    try:
+        data = request.data
+        json_data = json.loads(data)
+        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+            user = Users.query.filter(Users.email == str(json_data['email'])).first()
+            if user:
+                bookings = Booking.query.filter(and_(Booking.user_id == int(user.id),
+                                                     Booking.booking_id == int(json_data['booking_id'])
+                                                     )).delete()
+                db.session.commit()
+                if not bookings == 0:
+                    return jsonify({'code': 200, 'desc': "OK"}), 200
+            return jsonify({'code': 404, 'desc': "User or booking not found"}), 404
+        return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except ValueError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+#######################################################################################
+# ADMIN VIEW
 # View function for custom admin
 @app.route(def_route+'/', methods=['GET', 'POST'])
 @app.route("/", methods=['GET', 'POST'])
@@ -493,6 +567,7 @@ def send_mail(mail_to, subject, text):
         return False
     except Exception:
         return False
+
 
 #
 # ############ FUNCTIONS REQUERES MODIFICATION #######

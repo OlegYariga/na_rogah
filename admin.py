@@ -104,12 +104,23 @@ class BookingAdminView(BaseModelView):
         tables=dict(label='Стол', validators=[validators.DataRequired()]),
         accepted=dict(label='Подтверждено')
     )
-    pass
 
     def on_model_change(self, form, model, is_created):
         booking_date_time_from = request.form['date_time_from']
         booking_date_time_to = request.form['date_time_to']
         booking_table = request.form['tables']
+        model_created_id = model.booking_id
+        """
+        if not model_created_id:
+            booking = Booking.query.filter(and_(Booking.date_time_from == booking_date_time_from,
+                                                Booking.date_time_to == booking_date_time_to,
+                                                Booking.table_id == booking_table
+                                                )).first()
+
+            if booking:
+                db.session.expunge(booking)
+                raise validators.ValidationError(str(booking.booking_id))
+
 
         #booking = Booking.query.filter(and_(Booking.date_time_from == booking_date_time_from, Booking.date_time_to == booking_date_time_to, Booking.table_id == booking_table)).first()
         #validators.ValidationError(str(booking))
@@ -117,7 +128,7 @@ class BookingAdminView(BaseModelView):
             #raise validators.ValidationError('Запись с такими данными уже существует!')
         #else:
             #return super(BookingAdminView, self).on_model_change(form, model, is_created)
-
+        #"""
 
 
 class UsersAdminView(BaseModelView):

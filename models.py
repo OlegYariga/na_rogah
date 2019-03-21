@@ -271,6 +271,15 @@ class Booking(db.Model):
     def __repr__(self):
         return str(str(self.date_time_from)+'  '+str(self.date_time_to)+' - '+str(self.booking_id))
 
+    def prepare_json(self):
+        return {
+            'booking_id': self.booking_id,
+            'date_time_from': str(self.date_time_from),
+            'date_time_to': str(self.date_time_to),
+            'table_id': self.table_id,
+            'accepted': self.accepted
+        }
+
 
 class Timetable(db.Model):
     timetable_id = db.Column(db.BigInteger, primary_key=True)
