@@ -302,8 +302,8 @@ def check_auth():
         # Get data and turn them to json
         data = request.data
         json_data = json.loads(data)
-        # Check if user is in sesion and code is correct
-        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+        # Check if user is in sesion and uuid is correct
+        if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
             return jsonify({'code': 200, 'desc': "OK"}), 200
         return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except ValueError:
@@ -321,7 +321,7 @@ def empty_places():
         # Get data and convert into JSON (date_from, time_from, date_to, Time_to)
         data = request.data
         json_data = json.loads(data)
-        #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+        #if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
         str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
         str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
         date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
@@ -377,7 +377,7 @@ def reserve_place():
         ########################
         ########################
 
-        #if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+        #if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
         if not json_data['email'] == "":
             str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
             str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
@@ -420,7 +420,7 @@ def show_user_booking():
     try:
         data = request.data
         json_data = json.loads(data)
-        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+        if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
             user = Users.query.filter(Users.email == str(json_data['email'])).first()
             if user:
                 bookings = Booking.query.filter(Booking.user_id == user.id).order_by(Booking.date_time_from).all()
@@ -443,7 +443,7 @@ def delete_user_booking():
     try:
         data = request.data
         json_data = json.loads(data)
-        if (json_data['email'] in session) and (str(json_data['code']) == str(session[json_data['email']])):
+        if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
             user = Users.query.filter(Users.email == str(json_data['email'])).first()
             if user:
                 bookings = Booking.query.filter(and_(Booking.user_id == int(user.id),

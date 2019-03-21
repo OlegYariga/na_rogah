@@ -1,3 +1,4 @@
+import atexit
 from flask import Flask, session
 from config import Configuration
 from flask_sqlalchemy import SQLAlchemy
@@ -14,6 +15,7 @@ from flask_security import SQLAlchemyUserDatastore
 from flask_security import Security
 from flask_mail import Mail
 import os
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Create class instance Flask with name app
 # Load configurations from config file
@@ -58,3 +60,9 @@ security = Security(app, user_datastore)
 # For sending emails with Flask-Mail
 mail = Mail(app)
 
+# import function for delete old booking records from db
+from background_invoker import delete_old_booking
+# BackgroundScheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=delete_old_booking, trigger="interval", seconds=30)
+scheduler.start()
