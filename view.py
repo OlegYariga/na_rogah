@@ -239,7 +239,15 @@ def reg_user():
         data = request.data
         json_data = json.loads(data)
         # If user is in session
-        json_data['code'] = "10000"
+        #hardcode code
+        #
+        #
+        #
+        #
+        session[json_data['email']] = 10000
+        #
+        #
+
         json_data['email'] = str(json_data['email'])
         if str(json_data['email']) in session:
             # If code from email is correct
