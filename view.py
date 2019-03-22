@@ -244,7 +244,7 @@ def reg_user():
         #
         #
         #
-        session[json_data['email']] = 10000
+        #session[json_data['email']] = 10000
         #
         #
 
