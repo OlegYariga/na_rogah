@@ -234,7 +234,7 @@ def verify_email():
 
 @app.route(def_route+'/reg_user', methods=['POST'])
 def reg_user():
-    try:
+    #try:
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
@@ -264,10 +264,10 @@ def reg_user():
                 return jsonify({'code': 401, 'desc': "User already exists"}), 401
             return jsonify({'code': 400, 'desc': "Error when codes compare with each other"}), 400
         return jsonify({'code': 400, 'desc': "Error in key 'email' or code incorrect"}), 400
-    except KeyError:
-        return jsonify({'code': 400, 'desc': "Key Error"}), 400
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    #except KeyError:
+        #return jsonify({'code': 400, 'desc': "Key Error"}), 400
+    #except Exception:
+        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/password_recovery', methods=['POST'])
