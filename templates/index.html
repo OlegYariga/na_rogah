@@ -3,23 +3,35 @@
     {% extends 'base.html' %}
 
     {% block content %}
-<div class="five">
-    <a href="admin">ADMIN</a>
-    <a href="booking">Бронирование</a>
-    <a href="logout">Выйти</a>
-</div>
+<p></p>
+        <div class="alert alert-primary" role="alert">
+            <div class="d-flex justify-content-center">
+            <a class="btn btn-primary btn-lg active" role="button" aria-pressed="true" href="admin">Администрирование</a>
+                <p>&nbsp; &nbsp; &nbsp;</p>
+            <a class="btn btn-primary btn-lg active" role="button" aria-pressed="true" href="booking">Бронирование</a>
+                <p>&nbsp; &nbsp; &nbsp;</p>
+            <a class="btn btn-primary btn-lg active" role="button" aria-pressed="true" href="logout">Выйти</a>
+                </div>
 
-                <table class="table" id="flights">
-                    <thead>
+            <div class="d-flex justify-content-end">
+            </div>
+
+        </div>
+
+<p></p>
+
+                <table class="table table-bordered" id="flights">
+                    <thead class="thead-light">
                         <tr>
                             <th scope="col">Подтверждение</th>
-                            <th scope="col">ID брони</th>
-                            <th scope="col">Дата и время начала&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-                            <th scope="col">Дата и время окончания&nbsp;&nbsp;&nbsp;</th>
+                            <th scope="col">Удалить запись</th>
+                            <th scope="col">Номер брони</th>
+                            <th scope="col">Дата</th>
+                            <th scope="col">Время начала</th>
+                            <th scope="col">Время окончания</th>
                             <th scope="col">№ столa</th>
                             <th scope="col">Телефон</th>
                             <th scope="col">Имя</th>
-                            <th scope="col">Удалить запись</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,27 +40,32 @@
                         <tr id={{ flight.booking_id }}>
 
                             <td>
-                                <form action="" method="POST" name="data">
+                                <form action="" method="POST" name="data" id="data">
+                                    <div class="d-flex justify-content-center">
                                     <input type="hidden" name="index" value="0">
                                     <input type="hidden" name="buttonpressed"  value = {{flight.booking_id }}>
-                                    <button class = "accept">Подтвердить</button>
+                                    <button class="btn btn-outline-success">Подтвердить</button>
+                                    </div>
                                 </form>
                             </td>
-
-                            <th scope="row">{{ flight.booking_id}}</th>
-                            <th scope="row">{{ flight.date_time_from }}</th>
-                            <td> {{ flight.date_time_to }} </td>
-                            <td> {{ flight.table_id }} </td>
-                            <td> {{flight.phone }} </td>
-                            <td> {{flight.user_name }} </td>
-
                             <td>
                                 <form action="" method="POST" name="del">
+                                    <div class="d-flex justify-content-center">
                                     <input type="hidden" name="index" value="1">
                                     <input type="hidden" name="booking_delete"  value = {{flight.booking_id }}>
-                                    <button class="cancel">Удалить</button>
+                                    <button class="btn btn-outline-danger" onclick="return confirm('Вы точно хотите удалить запись о бронировании из списка?')">Удалить</button>
+                                    </div>
                                 </form>
                             </td>
+                            <td><div class="d-flex justify-content-center">{{ flight.booking_id}}</div></td>
+                            <td><div class="d-flex justify-content-center">{{ flight.date_from }}</div></td>
+                            <td><div class="d-flex justify-content-center">{{ flight.time_from }}</div></td>
+                            <td><div class="d-flex justify-content-center"> {{ flight.time_to }} </div></td>
+                            <td><div class="d-flex justify-content-center"> {{ flight.table_id }} </div></td>
+                            <td><div class="d-flex justify-content-center"> {{flight.phone }} </div></td>
+                            <td><div class="d-flex justify-content-center"> {{flight.user_name }} </div></td>
+
+
                         </tr>
                     {% endfor %}
 
@@ -60,6 +77,10 @@
     setTimeout(function(){
     location.reload();
 }, 10000);
+$('#data').submit(function() {
+  $(this).submit();
+  document.data.reset();
+});
 
 </script>
     {% endblock %}

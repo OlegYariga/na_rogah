@@ -68,6 +68,14 @@ class Users(db.Model, UserMixin):
     def __repr__(self):
         return str('email: '+str(self.email)+', '+str(self.name)+' тел: '+str(self.phone))
 
+    def prepare_json(self):
+        return {
+            'email': str(self.email),
+            'reg_date': str(self.reg_date),
+            'name': str(self.name),
+            'phone': str(self.phone)
+        }
+
 
 # Stores user roles
 class Role(db.Model, RoleMixin):

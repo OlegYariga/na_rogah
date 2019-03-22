@@ -177,6 +177,23 @@ def timetable():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
+@app.route(def_route+'/find_user/<user_email>', methods=['GET'])
+def find_user(user_email):
+    try:
+        user = Users.query.filter(Users.email == str(user_email)).first()
+        if user:
+            return jsonify({'code': 200, 'desc': "User was found"}), 200
+        return jsonify({'code': 404, 'desc': "Not Found"}), 404
+    except ValueError:
+        # If GET parameter was wrong
+        return jsonify({'code': 415, 'desc': "Not valid was received"}), 415
+    except TypeError:
+        # If program cannot translate data to json or can't append list
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        # If There're other SERVER errors
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
@@ -461,6 +478,57 @@ def delete_user_booking():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
+@app.route(def_route+'/view_user_credentials', methods=['POST'])
+def view_user_credentials():
+    data = request.data
+    json_data = json.loads(data)
+    if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
+        user = Users.query.filter(Users.email == str(json_data['email'])).first()
+        if user:
+            return jsonify({'data': user.prepare_json()}), 200
+        return jsonify({'code': 404, 'desc': "User not found"}), 404
+    return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+
+
+@app.route(def_route+'/change_user_credentials', methods=['POST'])
+def change_user_credentials():
+    data = request.data
+    json_data = json.loads(data)
+    if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
+        if not json_data['new_email'] or json_data['new_email'] == "":
+                user = Users.query.filter(Users.email == str(json_data['email'])).first()
+                if user:
+                    user.name = str(json_data['name'])
+                    user.phone = str(json_data['phone'])
+                    db.session.commit()
+                    return jsonify({'code': 200, 'desc': "OK"}), 200
+                return jsonify({'code': 404, 'desc': "User not found"}), 404
+        else:
+            if str(json_data['new_email']) in session:
+                # If code from email is correct
+                if str(json_data['code']) == str(session[json_data['new_email']]):
+                    new_user_exist = Users.query.filter(Users.email == json_data['new_email']).first()
+                    user = Users.query.filter(Users.email == str(json_data['email'])).first()
+                    # If there's such user in DB
+                    if not new_user_exist and user:
+                        user.email = str(json_data['new_email'])
+                        user.name = str(json_data['name'])
+                        db.session.commit()
+                        session.pop(str(json_data['email']))
+                        if user:
+                            # Generate unique identifier
+                            unique = str(uuid.uuid4())
+                            # Create new session with key <login> and unique value
+                            session[str(user.email)] = unique
+                            # Create a response
+                            return jsonify({'code': 200, 'desc': "OK",
+                                            'email': str(user.email), 'uuid': unique}), 200
+                    return jsonify({'code': 404, 'desc': "Current user not found or user with new_email already exists"}), 404
+                return jsonify({'code': 404, 'desc': "New email verify code is not valid"}), 404
+            return jsonify({'code': 404, 'desc': "New user email was not accepted yet (use /verify_email endpoint)"}), 404
+    return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+
+
 #######################################################################################
 # ADMIN VIEW
 # View function for custom admin
@@ -468,7 +536,7 @@ def delete_user_booking():
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
-    try:
+    #try:
         # If something was POSTed
         if request.method == 'POST':
             # If button "Accept" was pressed
@@ -524,15 +592,21 @@ def index():
         # MAIN PART
         # Select not-accepted booking records from DB
         booking = Booking.query.filter(not_(Booking.accepted == True)).all()
+
         flights_keys = {}
         flights = []
         for order in booking:
+            date_from = datetime.strftime(order.date_time_from, "%d.%m.%Y")
+            time_from = datetime.strftime(order.date_time_from, "%H:%M")
+            date_to = datetime.strftime(order.date_time_to, "%d.%m.%Y")
+            time_to = datetime.strftime(order.date_time_to, "%H:%M")
             # Select users in every booking item (order)
             user = Users.query.filter(Users.id == order.user_id).first()
             # Fill th dictionary with booking and user data
             flights_keys['booking_id'] = order.booking_id
-            flights_keys['date_time_from'] = order.date_time_from
-            flights_keys['date_time_to'] = order.date_time_to
+            flights_keys['date_from'] = date_from
+            flights_keys['time_from'] = time_from
+            flights_keys['time_to'] = time_to
             if user:
                 flights_keys['user_name'] = user.name
                 flights_keys['phone'] = user.phone
@@ -545,10 +619,10 @@ def index():
             flights_keys = {}
         # Create view page with data
         return render_template('index.html', flights=flights)
-    except KeyError:
-        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    #except KeyError:
+        #return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    #except Exception:
+        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 # Function to send email
