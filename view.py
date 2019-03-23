@@ -243,7 +243,7 @@ def verify_email():
         # Created session with key <email> and value <code>
         session[str(json_data['email'])] = str(code)
         for ses in session:
-            print(ses)
+            print(ses, '   ', session[(str(json_data['email']))])
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
         print('code in session::::' + str(session[json_data['email']]))
@@ -261,6 +261,8 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
+        for ses in session:
+            print(ses, '   ', session[(str(json_data['email']))])
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
         print('code in session::::' + str(session.get(str(json_data['email']))))
