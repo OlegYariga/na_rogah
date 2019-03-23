@@ -262,7 +262,7 @@ def reg_user():
         data = request.data
         json_data = json.loads(data)
         for ses in session:
-            print(ses, '   ', session[(str(json_data['email']))])
+            print(ses)
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
         print('code in session::::' + str(session.get(str(json_data['email']))))
