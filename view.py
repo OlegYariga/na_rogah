@@ -255,6 +255,11 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
+        print("\n \n \n \n \n ")
+        print('email from json:::::' + str(json_data['email']))
+        print('code in session::::' + str(session[json_data['email']]))
+        print('code from json:::::' + str(json_data['code']))
+        print("\n \n \n \n \n ")
         if str(json_data['email']) in session:
             # If code from email is correct
             if str(json_data['code']) == str(session[json_data['email']]):
@@ -538,9 +543,6 @@ def change_user_credentials():
 @login_required
 def index():
     #try:
-        print('email from json:::::' )
-        print('code in session::::')
-        print('code from json:::::')
         # If something was POSTed
         if request.method == 'POST':
             # If button "Accept" was pressed
