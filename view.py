@@ -242,6 +242,8 @@ def verify_email():
         send_mail(recipient, subject, body)
         # Created session with key <email> and value <code>
         session[str(json_data['email'])] = str(code)
+        for ses in session:
+            print(ses)
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
         print('code in session::::' + str(session[json_data['email']]))
