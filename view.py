@@ -537,10 +537,10 @@ def change_user_credentials():
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
-    print('email from json:::::' )
-    print('code in session::::')
-    print('code from json:::::')
     #try:
+        print('email from json:::::' )
+        print('code in session::::')
+        print('code from json:::::')
         # If something was POSTed
         if request.method == 'POST':
             # If button "Accept" was pressed
