@@ -242,6 +242,11 @@ def verify_email():
         send_mail(recipient, subject, body)
         # Created session with key <email> and value <code>
         session[str(json_data['email'])] = str(code)
+        print("\n \n \n \n \n ")
+        print('email from json:::::' + str(json_data['email']))
+        print('code from json:::::' + str(json_data['code']))
+        print('code in session::::' + str(session[json_data['email']]))
+        print("\n \n \n \n \n ")
         return jsonify({'code': 200, 'desc': "Email was sent", 'email_code': code}), 200
     except KeyError:
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
@@ -255,11 +260,6 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        print("\n \n \n \n \n ")
-        print('email from json:::::' + str(json_data['email']))
-        print('code from json:::::' + str(json_data['code']))
-        print('code in session::::' + str(session['rayajowah@mailfavorite.com']))
-        print("\n \n \n \n \n ")
         if str(json_data['email']) in session:
             # If code from email is correct
             if str(json_data['code']) == str(session[json_data['email']]):
