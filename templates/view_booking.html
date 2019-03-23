@@ -7,10 +7,10 @@
 
 <ul class="nav nav-tabs">
   <li class="nav-item">
-    <a class="nav-link active" href="">Подтверждение бронирования</a>
+    <a class="nav-link" href="/">Подтверждение бронирования</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="/view_booking">Все брони</a>
+    <a class="nav-link active" href="">Все брони</a>
   </li>
   <li class="nav-item">
     <a class="nav-link" href="/logout">Выход</a>
@@ -18,7 +18,18 @@
 </ul>
 
 <p></p>
-
+                <form action="" method="POST" name="booking">
+                                    <div class="d-flex justify-content-center">
+                                        <input type="hidden" name="index" value="0">
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text" id="basic-addon1">Дата бронирования</span>
+                                            </div>
+                                            <input type="date" name="date_booking" class="form-control" placeholder="Введите дату бронирования" aria-label="Username" aria-describedby="basic-addon1" value="20.03.2019">
+                                            <button class="btn btn-outline-primary" style="width:150px;">Загрузить</button>
+                                        </div>
+                                    </div>
+                </form>
                 <table class="table table-bordered" id="flights">
                     <thead class="thead-light">
                         <tr>
@@ -29,8 +40,7 @@
                             <th scope="col"><div class="d-flex justify-content-center">№ столa</div></th>
                             <th scope="col"><div class="d-flex justify-content-center">Имя</div></th>
                             <th scope="col"><div class="d-flex justify-content-center">Телефон</div></th>
-                            <th scope="col"><div class="d-flex justify-content-center">Подтвердить</div></th>
-                            <th scope="col"><div class="d-flex justify-content-center">Отклонить</div></th>
+                            <th scope="col"><div class="d-flex justify-content-center">Удалить запись</div></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -44,21 +54,13 @@
                             <td><div class="d-flex justify-content-center"> {{ flight.table_id }} </div></td>
                             <td><div class="d-flex justify-content-center"> {{flight.user_name }} </div></td>
                             <td><div class="d-flex justify-content-center"> {{flight.phone }} </div></td>
-                            <td>
-                                <form action="" method="POST" name="data" id="data">
-                                    <div class="d-flex justify-content-center">
-                                    <input type="hidden" name="index" value="0">
-                                    <input type="hidden" name="buttonpressed"  value = {{flight.booking_id }}>
-                                    <button class="btn btn-outline-success" style="width:150px;">Подтвердить</button>
-                                    </div>
-                                </form>
-                            </td>
+
                             <td>
                                 <form action="" method="POST" name="del">
                                     <div class="d-flex justify-content-center">
                                     <input type="hidden" name="index" value="1">
                                     <input type="hidden" name="booking_delete"  value = {{flight.booking_id }}>
-                                    <button class="btn btn-outline-danger" style="width:150px;" onclick="return confirm('Вы точно хотите удалить запись о бронировании из списка?')">Отклонить</button>
+                                    <button class="btn btn-outline-danger" style="width:150px;" onclick="return confirm('Вы точно хотите удалить запись о бронировании из списка?')">Удалить</button>
                                     </div>
                                 </form>
                             </td>

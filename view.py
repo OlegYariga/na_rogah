@@ -242,7 +242,7 @@ def verify_email():
         send_mail(recipient, subject, body)
         # Created session with key <email> and value <code>
         session[str(json_data['email'])] = str(code)
-        return jsonify({'code': 200, 'desc': "Email was sent"}), 200
+        return jsonify({'code': 200, 'desc': "Email was sent", 'email_code': code}), 200
     except KeyError:
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
     except Exception:
@@ -623,6 +623,67 @@ def index():
         #return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     #except Exception:
         #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+
+@app.route("/view_booking", methods=['GET', 'POST'])
+@login_required
+def view_booking():
+    # try:
+    date_booking = None
+    date_booking_date = None
+    # If something was POSTed
+    if request.method == 'POST':
+        # If button "Accept" was pressed
+        if request.form['index'] == "0":
+            # Select id of record, where button was pressed
+            date_booking = request.form['date_booking']
+        # If was pressed 'delete' button
+        if request.form['index'] == "1":
+            # Select id of record, where button was pressed
+            booking_delete = request.form['booking_delete']
+            if booking_delete:
+                # Delete such record from DB. If there's no records - do nothing
+                Booking.query.filter(Booking.booking_id == booking_delete).delete()
+                db.session.commit()
+    # MAIN PART
+    booking = Booking.query.filter((Booking.accepted == True)).all()
+
+    flights_keys = {}
+    flights = []
+    for order in booking:
+        date_from = datetime.strftime(order.date_time_from, "%d.%m.%Y")
+        time_from = datetime.strftime(order.date_time_from, "%H:%M")
+        date_to = datetime.strftime(order.date_time_to, "%d.%m.%Y")
+        time_to = datetime.strftime(order.date_time_to, "%H:%M")
+        if date_booking:
+            date_booking_str = datetime.strptime(date_booking, "%Y-%m-%d")
+            date_booking_date = datetime.strftime(date_booking_str, "%d.%m.%Y")
+        if date_booking_date:
+            if date_from == date_booking_date:
+                # Select users in every booking item (order)
+                user = Users.query.filter(Users.id == order.user_id).first()
+                # Fill th dictionary with booking and user data
+                flights_keys['booking_id'] = order.booking_id
+                flights_keys['date_from'] = date_from
+                flights_keys['time_from'] = time_from
+                flights_keys['time_to'] = time_to
+                if user:
+                    flights_keys['user_name'] = user.name
+                    flights_keys['phone'] = user.phone
+                else:
+                    flights_keys['user_name'] = "Нет данных"
+                    flights_keys['phone'] = "Нет данных"
+                flights_keys['table_id'] = order.table_id
+                # Append list with the dictionary and clear dictionary
+                flights.append(flights_keys)
+                flights_keys = {}
+    return render_template('view_booking.html', flights=flights, date_from=date_from)
+
+
+
+
+
 
 
 # Function to send email
