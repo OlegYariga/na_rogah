@@ -274,9 +274,6 @@ def reg_user():
                         # Create new session with key <login> and unique value
                         session[str(user.email)] = unique
                         # Create a response
-                        print('email from json:::::'+str(json_data['email']))
-                        print('code in session::::'+str(session[json_data['email']]))
-                        print('code from json:::::'+str(json_data['code']))
 
                         return jsonify({'code': 200, 'desc': "OK",
                                         'email': str(user.email), 'uuid': unique}), 200
@@ -540,6 +537,9 @@ def change_user_credentials():
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
+    print('email from json:::::' )
+    print('code in session::::')
+    print('code from json:::::')
     #try:
         # If something was POSTed
         if request.method == 'POST':
