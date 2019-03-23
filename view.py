@@ -274,6 +274,10 @@ def reg_user():
                         # Create new session with key <login> and unique value
                         session[str(user.email)] = unique
                         # Create a response
+                        print('email from json:::::'+str(json_data['email']))
+                        print('code in session::::'+str(session[json_data['email']]))
+                        print('code from json:::::'+str(json_data['code']))
+
                         return jsonify({'code': 200, 'desc': "OK",
                                         'email': str(user.email), 'uuid': unique}), 200
                 return jsonify({'code': 401, 'desc': "User already exists"}), 401
@@ -646,6 +650,11 @@ def view_booking():
                 # Delete such record from DB. If there's no records - do nothing
                 Booking.query.filter(Booking.booking_id == booking_delete).delete()
                 db.session.commit()
+    if request.method == 'GET':
+        date_time_now_utc = datetime.utcnow()
+        date_time_moscow_now = date_time_now_utc + timedelta(hours=3)
+        date_time_moscow_now = datetime.strftime(date_time_moscow_now, "%Y-%m-%d")
+        date_booking = str(date_time_moscow_now)
     # MAIN PART
     booking = Booking.query.filter((Booking.accepted == True)).all()
 
@@ -678,7 +687,8 @@ def view_booking():
                 # Append list with the dictionary and clear dictionary
                 flights.append(flights_keys)
                 flights_keys = {}
-    return render_template('view_booking.html', flights=flights, date_from=date_from)
+
+    return render_template('view_booking.html', flights=flights)
 
 
 
