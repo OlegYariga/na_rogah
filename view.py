@@ -261,7 +261,7 @@ def reg_user():
         json_data = json.loads(data)
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
-        print('code in session::::' + str(session['rayajowah@mailfavorite.com']))
+        print('code in session::::' + str(session.get(str(json_data['email']))))
         print("\n \n \n \n \n ")
         if str(json_data['email']) in session:
             # If code from email is correct
