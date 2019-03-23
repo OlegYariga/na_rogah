@@ -244,7 +244,6 @@ def verify_email():
         session[str(json_data['email'])] = str(code)
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
-        print('code from json:::::' + str(json_data['code']))
         print('code in session::::' + str(session[json_data['email']]))
         print("\n \n \n \n \n ")
         return jsonify({'code': 200, 'desc': "Email was sent", 'email_code': code}), 200
