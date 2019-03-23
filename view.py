@@ -241,6 +241,8 @@ def verify_email():
         # Send mail
         send_mail(recipient, subject, body)
         # Created session with key <email> and value <code>
+        session.permanent = True
+        app.permanent_session_lifetime = timedelta(minutes=100)
         session[str(json_data['email'])] = str(code)
         for ses in session:
             print(ses, '   ', session[(str(json_data['email']))])
