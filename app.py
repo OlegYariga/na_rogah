@@ -31,7 +31,7 @@ manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
 # Init sessions
-Session(app)
+sess = Session(app)
 
 # Login manager
 loginmanager = LoginManager()

@@ -15,7 +15,7 @@ from models import LastUpdate
 from models import Category, Menu, Images
 from app import *
 from app import mail
-
+from app import sess
 # Load APPLICATION_ROOT from config
 def_route = '/api/v1'
 
@@ -23,7 +23,8 @@ def_route = '/api/v1'
 # Make session permanent with lifetime=1 before request
 @app.before_request
 def make_session_permanent():
-    #session.permanent = True
+    sess.permanent = True
+    sess.app.session_interface.db.create_all()
     app.permanent_session_lifetime = timedelta(minutes=5)
 
 
