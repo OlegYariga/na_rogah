@@ -7,7 +7,7 @@ class Configuration(object):
     # DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = 'somethimngverysercrettext'
-    SESSION_TYPE = 'sqlalchemy'
+    SESSION_TYPE = 'filesystem'
     SECURITY_PASSWORD_SALT = 'sequritipasswordsalttonotbeenencrypted852753951'
     SECURITY_PASSWORD_HASH = 'plaintext'
     #PATH = 'localhost:5000/api/v1/photos/'

@@ -15,7 +15,7 @@ from models import LastUpdate
 from models import Category, Menu, Images
 from app import *
 from app import mail
-from app import sess
+
 # Load APPLICATION_ROOT from config
 def_route = '/api/v1'
 
@@ -23,8 +23,7 @@ def_route = '/api/v1'
 # Make session permanent with lifetime=1 before request
 @app.before_request
 def make_session_permanent():
-    sess.permanent = True
-    sess.app.session_interface.db.create_all()
+    session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=5)
 
 
@@ -226,12 +225,6 @@ def authorize():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-@app.route(def_route+'/in_logs', methods=['POST'])
-def in_logs():
-    for s in session.keys():
-        print(s)
-    return ("")
-
 # Method to verify email
 @app.route(def_route+'/verify_email', methods=['POST'])
 def verify_email():
@@ -253,7 +246,7 @@ def verify_email():
         print(session[sign_in_data['email']])
 
         #session[str(json_data['email'])] = str(code)
-        for ses in session:
+        for ses in session.items():
             print(ses, '   ', session[(str(json_data['email']))])
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
@@ -272,10 +265,7 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        for s in session.keys():
-            print(s)
-        return ("")
-        for ses in session:
+        for ses in session.items():
             print(ses)
         print("\n \n \n \n \n ")
         print('email from json:::::' + str(json_data['email']))
