@@ -23,7 +23,7 @@ def_route = '/api/v1'
 # Make session permanent with lifetime=1 before request
 @app.before_request
 def make_session_permanent():
-    session.permanent = True
+    #session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=5)
 
 
@@ -225,6 +225,12 @@ def authorize():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
+@app.route(def_route+'/in_logs', methods=['POST'])
+def in_logs():
+    for s in session.keys():
+        print(s)
+    return ("")
+
 # Method to verify email
 @app.route(def_route+'/verify_email', methods=['POST'])
 def verify_email():
@@ -241,9 +247,11 @@ def verify_email():
         # Send mail
         send_mail(recipient, subject, body)
         # Created session with key <email> and value <code>
-        session.permanent = True
-        app.permanent_session_lifetime = timedelta(minutes=100)
-        session[str(json_data['email'])] = str(code)
+        sign_in_data = request.get_json()
+        session[sign_in_data['email']] = str(code)
+        print(session[sign_in_data['email']])
+
+        #session[str(json_data['email'])] = str(code)
         for ses in session:
             print(ses, '   ', session[(str(json_data['email']))])
         print("\n \n \n \n \n ")
@@ -263,6 +271,9 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
+        for s in session.keys():
+            print(s)
+        return ("")
         for ses in session:
             print(ses)
         print("\n \n \n \n \n ")
