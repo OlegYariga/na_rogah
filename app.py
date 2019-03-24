@@ -16,11 +16,14 @@ from flask_security import Security
 from flask_mail import Mail
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask_jwt_extended import JWTManager
 
 # Create class instance Flask with name app
 # Load configurations from config file
 app = Flask(__name__)
 app.config.from_object(Configuration)
+app.config['JWT_SECRET_KEY'] = 'jwt-secret-string'
+
 
 # Create database
 db = SQLAlchemy(app)
@@ -66,3 +69,7 @@ from background_invoker import delete_old_booking
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=delete_old_booking, trigger="interval", seconds=30)
 scheduler.start()
+
+
+# JWT
+jwt = JWTManager(app)

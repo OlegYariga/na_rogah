@@ -16,6 +16,13 @@ from models import Category, Menu, Images
 from app import *
 from app import mail
 
+from flask_jwt_extended import (create_access_token,
+                                create_refresh_token,
+                                jwt_required,
+                                jwt_refresh_token_required,
+                                get_jwt_identity,
+                                get_raw_jwt)
+
 # Load APPLICATION_ROOT from config
 def_route = '/api/v1'
 
@@ -216,8 +223,13 @@ def authorize():
             # Create new session with key <login> and unique value
             session[str(user.email)] = unique
             # Create a response
+            ##### JWT@@@@@
+            access_token = "Bearer "+create_access_token(identity='TEST')
+            refresh_token = create_refresh_token(identity='TEST')
+            ####### JWT!!!!!
             return jsonify({'code': 200, 'desc': "Authorized",
-                            'email': str(user.email), 'uuid': unique}), 200
+                            'email': str(user.email), 'uuid': unique,
+                            'access_token': access_token}), 200
         return jsonify({'code': 401, 'desc': "Credentials incorrect"}), 401
     except KeyError:
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
@@ -257,6 +269,13 @@ def verify_email():
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
     except Exception:
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+
+
+@app.route(def_route+'/test_auth', methods=['GET'])
+@jwt_required
+def test_auth():
+    return jsonify({'code': 200, 'desc': "ok"}), 200
+
 
 
 @app.route(def_route+'/reg_user', methods=['POST'])
