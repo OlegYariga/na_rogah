@@ -27,7 +27,6 @@ from flask_jwt_extended import (create_access_token,
 def_route = '/api/v1'
 expires_jwt = timedelta(minutes=1000)
 
-user_reg_access_code = []
 
 
 def find_user_reg_access_code(email, code):
