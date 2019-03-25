@@ -27,10 +27,16 @@ from flask_jwt_extended import (create_access_token,
 def_route = '/api/v1'
 expires_jwt = timedelta(minutes=1000)
 
-user_reg_access_code = {}
+user_reg_access_code = []
 
 
 def find_user_reg_access_code(email, code):
+    count_items = user_reg_access_code.count(str(email)+str(code))
+    if count_items > 0:
+        return True
+    return False
+
+    """
     #try:
         '''
         for key, value in self.user_reg_access_code.items():
@@ -47,15 +53,20 @@ def find_user_reg_access_code(email, code):
         return False
     #except Exception:
         #return False
+    """
 
 
 def insert_user_reg_access_code(email, code):
+    user_reg_access_code.append(str(email)+str(code))
+    return True
+    """
     #try:
         #user_reg_access_code[email] = code
         user_reg_access_code.update({email: code})
         print(user_reg_access_code.values())
     #except Exception:
         #return False
+    """
 
 
 def delete_user_reg_access_code(email):
