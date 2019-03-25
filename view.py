@@ -32,6 +32,7 @@ expires_jwt = timedelta(minutes=1000)
 def find_user_reg_access_code(email, code):
     print(email, code)
     count_items = user_reg_access_code.count(str(email)+str(code))
+    print(count_items)
     if count_items > 0:
         return True
     return False
