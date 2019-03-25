@@ -267,7 +267,8 @@ def reg_user():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        if user_access_code.find_user_reg_access_code(json_data['email'], json_data['code']):
+        user_access_code_got = user_access_code.find_user_reg_access_code(json_data['email'], json_data['code'])
+        if user_access_code_got:
             # Select user with such email
             user_exist = Users.query.filter(Users.email == json_data['email']).first()
             # If there's such user in DB
