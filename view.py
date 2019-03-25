@@ -28,34 +28,6 @@ def_route = '/api/v1'
 expires_jwt = timedelta(minutes=1000)
 
 
-class UserRegAccessCode:
-    def __init__(self):
-        self.user_reg_access_code = {}
-
-    def find_user_reg_access_code(self, email, code):
-        try:
-            if int(self.user_reg_access_code.get(email)) == int(code):
-                return True
-            return False
-        except Exception:
-            return False
-
-    def insert_user_reg_access_code(self, email, code):
-        try:
-            self.user_reg_access_code[email] = code
-            print(self.user_reg_access_code.values())
-        except Exception:
-            return False
-
-    def delete_user_reg_access_code(self, email):
-        try:
-            u = self.user_reg_access_code.pop(email, None)
-            print(u)
-        except Exception:
-            return False
-
-user_access_code = UserRegAccessCode()
-
 # Make session permanent with lifetime=1 before request
 @app.before_request
 def make_session_permanent():
@@ -425,7 +397,7 @@ def reserve_place():
                 user = Users.query.filter(Users.email == json_data['email']).first()
                 table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
                 if not forbidden:
-                    if table_id:
+                    if table_id and user:
                         booking = Booking(date_time_from=date_time_from,
                                           date_time_to=date_time_to,
                                           user_id=user.id,

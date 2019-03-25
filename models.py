@@ -306,3 +306,30 @@ class Timetable(db.Model):
             'time_from': str(self.time_from),
             'time_to': str(self.time_to)
         }
+
+
+class UserRegAccessCode:
+    def __init__(self):
+        self.user_reg_access_code = {}
+
+    def find_user_reg_access_code(self, email, code):
+        try:
+            if int(self.user_reg_access_code.get(email)) == int(code):
+                return True
+            return False
+        except Exception:
+            return False
+
+    def insert_user_reg_access_code(self, email, code):
+        try:
+            self.user_reg_access_code[email] = code
+            print(self.user_reg_access_code.values())
+        except Exception:
+            return False
+
+    def delete_user_reg_access_code(self, email):
+        try:
+            u = self.user_reg_access_code.pop(email, None)
+            print(u)
+        except Exception:
+            return False
