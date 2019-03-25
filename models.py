@@ -315,6 +315,7 @@ class UserRegAccessCode:
     def find_user_reg_access_code(self, email, code):
         try:
             code_find = int(self.user_reg_access_code.get(email))
+            print(code_find)
             if int(code_find) == int(code):
                 return True
             return False
