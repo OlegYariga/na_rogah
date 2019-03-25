@@ -51,7 +51,8 @@ def find_user_reg_access_code(email, code):
 
 def insert_user_reg_access_code(email, code):
     #try:
-        user_reg_access_code[email] = code
+        #user_reg_access_code[email] = code
+        user_reg_access_code.update({email: code})
         print(user_reg_access_code.values())
     #except Exception:
         #return False
