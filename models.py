@@ -280,11 +280,15 @@ class Booking(db.Model):
         return str(str(self.date_time_from)+'  '+str(self.date_time_to)+' - '+str(self.booking_id))
 
     def prepare_json(self):
+        table = Tables.query.filter(self.table_id == Tables.table_id).first()
         return {
             'booking_id': self.booking_id,
             'date_time_from': str(self.date_time_from),
             'date_time_to': str(self.date_time_to),
             'table_id': self.table_id,
+            'chair_type': str(table.chair_type),
+            'chair_count': table.chair_count,
+            'position': str(table.position),
             'accepted': self.accepted
         }
 

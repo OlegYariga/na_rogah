@@ -25,7 +25,36 @@ from flask_jwt_extended import (create_access_token,
 
 # Load APPLICATION_ROOT from config
 def_route = '/api/v1'
+expires_jwt = timedelta(minutes=1000)
 
+
+class UserRegAccessCode:
+    def __init__(self):
+        self.user_reg_access_code = {}
+
+    def find_user_reg_access_code(self, email, code):
+        try:
+            if int(self.user_reg_access_code.get(email)) == int(code):
+                return True
+            return False
+        except Exception:
+            return False
+
+    def insert_user_reg_access_code(self, email, code):
+        try:
+            self.user_reg_access_code[email] = code
+            print(self.user_reg_access_code.values())
+        except Exception:
+            return False
+
+    def delete_user_reg_access_code(self, email):
+        try:
+            u = self.user_reg_access_code.pop(email, None)
+            print(u)
+        except Exception:
+            return False
+
+user_access_code = UserRegAccessCode()
 
 # Make session permanent with lifetime=1 before request
 @app.before_request
@@ -207,7 +236,7 @@ def find_user(user_email):
 # POST methods
 
 
-# User authorization with create session
+# User authorization with create JWT
 @app.route(def_route+'/auth', methods=['POST'])
 def authorize():
     try:
@@ -218,18 +247,11 @@ def authorize():
         user = Users.query.filter(and_(Users.email == json_data['email'],
                                        Users.password == json_data['password'])).first()
         if user:
-            # Generate unique identifier
-            unique = str(uuid.uuid4())
-            # Create new session with key <login> and unique value
-            session[str(user.email)] = unique
-            # Create a response
-            ##### JWT@@@@@
-            access_token = "Bearer "+create_access_token(identity='TEST')
-            refresh_token = create_refresh_token(identity='TEST')
-            ####### JWT!!!!!
+            # Generate token with JWT
+            access_token = "Bearer "+create_access_token(identity=user.email, expires_delta=expires_jwt)
+            # Create a response with access token
             return jsonify({'code': 200, 'desc': "Authorized",
-                            'email': str(user.email), 'uuid': unique,
-                            'access_token': access_token}), 200
+                            'email': str(user.email), 'access_token': access_token}), 200
         return jsonify({'code': 401, 'desc': "Credentials incorrect"}), 401
     except KeyError:
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
@@ -240,7 +262,7 @@ def authorize():
 # Method to verify email
 @app.route(def_route+'/verify_email', methods=['POST'])
 def verify_email():
-    try:
+    #try:
         # Get data and convert them to JSON (ONLY email)
         data = request.data
         json_data = json.loads(data)
@@ -252,23 +274,13 @@ def verify_email():
         body = 'Добро пожаловать в ресторан "На Рогах"! Ваш код подтверждения - ' + code
         # Send mail
         send_mail(recipient, subject, body)
-        # Created session with key <email> and value <code>
-        sign_in_data = request.get_json()
-        session[sign_in_data['email']] = str(code)
-        print(session[sign_in_data['email']])
-
-        #session[str(json_data['email'])] = str(code)
-        for ses in session.items():
-            print(ses, '   ', session[(str(json_data['email']))])
-        print("\n \n \n \n \n ")
-        print('email from json:::::' + str(json_data['email']))
-        print('code in session::::' + str(session[json_data['email']]))
-        print("\n \n \n \n \n ")
+        # Add code to UserAccessCode
+        user_access_code.insert_user_reg_access_code(json_data['email'], code)
         return jsonify({'code': 200, 'desc': "Email was sent", 'email_code': code}), 200
-    except KeyError:
-        return jsonify({'code': 400, 'desc': "Bad request"}), 400
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    #except KeyError:
+        #return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    #except Exception:
+        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/test_auth', methods=['GET'])
@@ -277,44 +289,32 @@ def test_auth():
     return jsonify({'code': 200, 'desc': "ok"}), 200
 
 
-
 @app.route(def_route+'/reg_user', methods=['POST'])
 def reg_user():
     try:
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        for ses in session.items():
-            print(ses)
-        print("\n \n \n \n \n ")
-        print('email from json:::::' + str(json_data['email']))
-        print('code in session::::' + str(session(str(json_data['email']))))
-        print("\n \n \n \n \n ")
-        if str(json_data['email']) in session:
-            # If code from email is correct
-            if str(json_data['code']) == str(session[json_data['email']]):
-                user_exist = Users.query.filter(Users.email == json_data['email']).first()
-                # If there's such user in DB
-                if not user_exist:
-                    # Create user with recieved data
-                    user = Users(email=json_data['email'], password=json_data['password'],
-                                 name=json_data['name'], phone=json_data['phone'],
-                                 active=False)
-                    # Add user to DB
-                    db.session.add(user)
-                    db.session.commit()
-                    if user:
-                        # Generate unique identifier
-                        unique = str(uuid.uuid4())
-                        # Create new session with key <login> and unique value
-                        session[str(user.email)] = unique
-                        # Create a response
-
-                        return jsonify({'code': 200, 'desc': "OK",
-                                        'email': str(user.email), 'uuid': unique}), 200
-                return jsonify({'code': 401, 'desc': "User already exists"}), 401
-            return jsonify({'code': 400, 'desc': "Error when codes compare with each other"}), 400
-        return jsonify({'code': 400, 'desc': "Error in key 'email' or code incorrect"}), 400
+        if user_access_code.find_user_reg_access_code(json_data['email'], json_data['code']):
+            # Select user with such email
+            user_exist = Users.query.filter(Users.email == json_data['email']).first()
+            # If there's such user in DB
+            if not user_exist:
+                # Create user with recieved data
+                user = Users(email=json_data['email'], password=json_data['password'],
+                             name=json_data['name'], phone=json_data['phone'],
+                             active=False)
+                # Add user to DB
+                db.session.add(user)
+                db.session.commit()
+                if user:
+                    # Generate token with JWT
+                    access_token = "Bearer " + create_access_token(identity=user.email, expires_delta=expires_jwt)
+                    # Create a response with access token
+                    return jsonify({'code': 200, 'desc': "Authorized",
+                                    'email': str(user.email), 'access_token': access_token}), 200
+            return jsonify({'code': 401, 'desc': "User already exists"}), 401
+        return jsonify({'code': 422, 'desc': "Code incorrect"}), 422
     except KeyError:
         return jsonify({'code': 400, 'desc': "Key Error"}), 400
     except Exception:
@@ -327,12 +327,11 @@ def password_recovery():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        # If user is in session
-        if json_data['email'] in session:
+        if user_access_code.find_user_reg_access_code(json_data['email'], json_data['code']):
             # If user was registered
             user_recovery = Users.query.filter(Users.email == json_data['email']).first()
             # If code from email is correct and suxh user exists
-            if str(json_data['code']) == str(session[json_data['email']]) and user_recovery:
+            if user_recovery:
                 # Update password of a user with new password
                 user_recovery.password = json_data['password']
                 # Change record in DB
@@ -340,7 +339,7 @@ def password_recovery():
                 db.session.commit()
                 return jsonify({'code': 200, 'desc': "OK"}), 200
             return jsonify({'code': 401, 'desc': "No such user detected"}), 401
-        return jsonify({'code': 400, 'desc': "Code incorrect. Repeat sending"}), 400
+        return jsonify({'code': 422, 'desc': "Code incorrect"}), 422
     except KeyError:
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
     except Exception:
@@ -349,15 +348,10 @@ def password_recovery():
 
 # Check if user is authorized
 @app.route(def_route+'/check_auth', methods=['POST'])
+@jwt_required
 def check_auth():
     try:
-        # Get data and turn them to json
-        data = request.data
-        json_data = json.loads(data)
-        # Check if user is in sesion and uuid is correct
-        if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
-            return jsonify({'code': 200, 'desc': "OK"}), 200
-        return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+        return jsonify({'code': 200, 'desc': "OK"}), 200
     except ValueError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except KeyError:
@@ -373,7 +367,6 @@ def empty_places():
         # Get data and convert into JSON (date_from, time_from, date_to, Time_to)
         data = request.data
         json_data = json.loads(data)
-        #if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
         str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
         str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
         date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
@@ -402,7 +395,6 @@ def empty_places():
 
             return jsonify({'data': response_list}), 200
         return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
-        #return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except ValueError:
@@ -412,24 +404,11 @@ def empty_places():
 
 
 @app.route(def_route+'/reserve_place', methods=['POST'])
+@jwt_required
 def reserve_place():
     try:
         data = request.data
         json_data = json.loads(data)
-        #########################
-        ########################
-        # Этот код был перенесен из эндпоинта reg_user
-        user_exist = Users.query.filter(Users.email == json_data['email']).first()
-        if not user_exist:
-            user = Users(email=json_data['email'], password="0000",
-                         name=json_data['name'], phone=json_data['phone'],
-                         active=False)
-            db.session.add(user)
-            db.session.commit()
-        ########################
-        ########################
-
-        #if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
         if not json_data['email'] == "":
             str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
             str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
@@ -458,7 +437,6 @@ def reserve_place():
                 return jsonify({'code': 451, 'desc': "This time is booked"}), 451
             return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
         return jsonify({'code': 420, 'desc': "Email is empty"}), 420
-        #return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except ValueError:
@@ -468,20 +446,19 @@ def reserve_place():
 
 
 @app.route(def_route+'/show_user_booking', methods=['POST'])
+@jwt_required
 def show_user_booking():
     try:
         data = request.data
         json_data = json.loads(data)
-        if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
-            user = Users.query.filter(Users.email == str(json_data['email'])).first()
-            if user:
-                bookings = Booking.query.filter(Booking.user_id == user.id).order_by(Booking.date_time_from).all()
-                booking_list = []
-                for booking in bookings:
-                    booking_list.append(booking.prepare_json())
-                return jsonify({'bookings': booking_list}), 200
-            return jsonify({'code': 404, 'desc': "User not found"}), 404
-        return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+        user = Users.query.filter(Users.email == str(json_data['email'])).first()
+        if user:
+            bookings = Booking.query.filter(Booking.user_id == user.id).order_by(Booking.date_time_from).all()
+            booking_list = []
+            for booking in bookings:
+                booking_list.append(booking.prepare_json())
+            return jsonify({'bookings': booking_list}), 200
+        return jsonify({'code': 404, 'desc': "User not found"}), 404
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except ValueError:
@@ -491,21 +468,20 @@ def show_user_booking():
 
 
 @app.route(def_route+'/delete_user_booking', methods=['POST'])
+@jwt_required
 def delete_user_booking():
     try:
         data = request.data
         json_data = json.loads(data)
-        if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
-            user = Users.query.filter(Users.email == str(json_data['email'])).first()
-            if user:
-                bookings = Booking.query.filter(and_(Booking.user_id == int(user.id),
-                                                     Booking.booking_id == int(json_data['booking_id'])
-                                                     )).delete()
-                db.session.commit()
-                if not bookings == 0:
-                    return jsonify({'code': 200, 'desc': "OK"}), 200
-            return jsonify({'code': 404, 'desc': "User or booking not found"}), 404
-        return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+        user = Users.query.filter(Users.email == str(json_data['email'])).first()
+        if user:
+            bookings = Booking.query.filter(and_(Booking.user_id == int(user.id),
+                                                 Booking.booking_id == int(json_data['booking_id'])
+                                                 )).delete()
+            db.session.commit()
+            if not bookings == 0:
+                return jsonify({'code': 200, 'desc': "OK"}), 200
+        return jsonify({'code': 404, 'desc': "User or booking not found"}), 404
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except ValueError:
