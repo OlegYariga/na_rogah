@@ -313,7 +313,7 @@ class UserRegAccessCode:
         self.user_reg_access_code = {}
 
     def find_user_reg_access_code(self, email, code):
-        try:
+        #try:
             for key, value in self.user_reg_access_code.items():
                 print(key, value)
                 if email == key and int(code) == int(value):
@@ -325,8 +325,8 @@ class UserRegAccessCode:
             #if int(code_find) == int(code):
                 #return True
             #return False
-        except Exception:
-            return False
+        #except Exception:
+            #return False
 
     def insert_user_reg_access_code(self, email, code):
         try:
