@@ -27,6 +27,43 @@ from flask_jwt_extended import (create_access_token,
 def_route = '/api/v1'
 expires_jwt = timedelta(minutes=1000)
 
+user_reg_access_code = {}
+
+
+def find_user_reg_access_code(email, code):
+    #try:
+        '''
+        for key, value in self.user_reg_access_code.items():
+            print(key, value)
+            if email == key and int(code) == int(value):
+                print("FOUND")
+                return True
+        return False
+        '''
+        code_find = str(user_reg_access_code.get(email))
+        print(code_find)
+        if str(code_find) == str(code):
+            return True
+        return False
+    #except Exception:
+        #return False
+
+
+def insert_user_reg_access_code(email, code):
+    #try:
+        user_reg_access_code[email] = code
+        print(user_reg_access_code.values())
+    #except Exception:
+        #return False
+
+
+def delete_user_reg_access_code(email):
+    try:
+        u = user_reg_access_code.pop(email, None)
+        print(u)
+    except Exception:
+        return False
+
 
 # Make session permanent with lifetime=1 before request
 @app.before_request
@@ -247,7 +284,7 @@ def verify_email():
         # Send mail
         send_mail(recipient, subject, body)
         # Add code to UserAccessCode
-        user_access_code.insert_user_reg_access_code(json_data['email'], code)
+        insert_user_reg_access_code(json_data['email'], code)
         return jsonify({'code': 200, 'desc': "Email was sent", 'email_code': code}), 200
     #except KeyError:
         #return jsonify({'code': 400, 'desc': "Bad request"}), 400
@@ -263,11 +300,11 @@ def test_auth():
 
 @app.route(def_route+'/reg_user', methods=['POST'])
 def reg_user():
-    try:
+    #try:
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        if user_access_code.find_user_reg_access_code(json_data['email'], json_data['code']):
+        if find_user_reg_access_code(json_data['email'], json_data['code']):
             # Select user with such email
             user_exist = Users.query.filter(Users.email == json_data['email']).first()
             # If there's such user in DB
@@ -287,10 +324,10 @@ def reg_user():
                                     'email': str(user.email), 'access_token': access_token}), 200
             return jsonify({'code': 401, 'desc': "User already exists"}), 401
         return jsonify({'code': 422, 'desc': "Code incorrect"}), 422
-    except KeyError:
-        return jsonify({'code': 400, 'desc': "Key Error"}), 400
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    #except KeyError:
+        #return jsonify({'code': 400, 'desc': "Key Error"}), 400
+    #except Exception:
+        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/password_recovery', methods=['POST'])
@@ -299,7 +336,7 @@ def password_recovery():
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
-        if user_access_code.find_user_reg_access_code(json_data['email'], json_data['code']):
+        if find_user_reg_access_code(json_data['email'], json_data['code']):
             # If user was registered
             user_recovery = Users.query.filter(Users.email == json_data['email']).first()
             # If code from email is correct and suxh user exists

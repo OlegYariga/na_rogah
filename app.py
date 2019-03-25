@@ -75,4 +75,4 @@ scheduler.start()
 jwt = JWTManager(app)
 
 #initialized store for user access codes
-user_access_code = UserRegAccessCode()
+#user_access_code = UserRegAccessCode()
