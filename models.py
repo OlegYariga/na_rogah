@@ -309,15 +309,22 @@ class Timetable(db.Model):
 
 
 class UserRegAccessCode:
-    user_reg_access_code = {}
+    def __init__(self):
+        self.user_reg_access_code = {}
 
     def find_user_reg_access_code(self, email, code):
         try:
-            code_find = int(self.user_reg_access_code.get(email))
-            print(code_find)
-            if int(code_find) == int(code):
-                return True
+            for key, value in self.user_reg_access_code.items():
+                print(key, value)
+                if email == key and int(code) == int(value):
+                    print("FOUND")
+                    return True
             return False
+            #code_find = int(self.user_reg_access_code.get(email))
+            #print(code_find)
+            #if int(code_find) == int(code):
+                #return True
+            #return False
         except Exception:
             return False
 
