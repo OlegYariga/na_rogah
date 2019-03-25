@@ -309,8 +309,7 @@ class Timetable(db.Model):
 
 
 class UserRegAccessCode:
-    def __init__(self):
-        self.user_reg_access_code = {}
+    user_reg_access_code = {}
 
     def find_user_reg_access_code(self, email, code):
         try:
