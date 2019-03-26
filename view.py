@@ -492,7 +492,6 @@ def change_user_credentials():
             if user:
                 user.name = str(json_data['name'])
                 user.phone = str(json_data['phone'])
-                user.password = json_data['password']
                 user.birthday = json_data['birthday']
                 db.session.commit()
                 return jsonify({'code': 200, 'desc': "OK"}), 200
@@ -508,7 +507,6 @@ def change_user_credentials():
                     user.email = str(json_data['new_email'])
                     user.name = str(json_data['name'])
                     user.phone = str(json_data['phone'])
-                    user.password = json_data['password']
                     user.birthday = json_data['birthday']
                     db.session.commit()
                     if user:
