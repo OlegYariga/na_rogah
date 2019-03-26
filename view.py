@@ -492,7 +492,12 @@ def change_user_credentials():
             if user:
                 user.name = str(json_data['name'])
                 user.phone = str(json_data['phone'])
-                user.birthday = json_data['birthday']
+                bd = json_data['birthday']
+                if not bd or bd == "":
+                    date_birth = None
+                else:
+                    date_birth = datetime.strptime(bd, "%Y-%m-%d")
+                user.birthday = date_birth
                 db.session.commit()
                 return jsonify({'code': 200, 'desc': "OK"}), 200
             return jsonify({'code': 404, 'desc': "User not found"}), 404
@@ -507,7 +512,12 @@ def change_user_credentials():
                     user.email = str(json_data['new_email'])
                     user.name = str(json_data['name'])
                     user.phone = str(json_data['phone'])
-                    user.birthday = json_data['birthday']
+                    bd = json_data['birthday']
+                    if not bd or bd == "":
+                        date_birth = None
+                    else:
+                        date_birth = datetime.strptime(bd, "%Y-%m-%d")
+                    user.birthday = date_birth
                     db.session.commit()
                     if user:
                         # Generate token with JWT

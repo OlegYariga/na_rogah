@@ -55,7 +55,7 @@ class Users(db.Model, UserMixin):
     reg_date = db.Column(db.DateTime, default=datetime.now())
     name = db.Column(db.String(64))
     surname = db.Column(db.String(64))
-    birthday = db.Column(db.DateTime)
+    birthday = db.Column(db.Date)
     phone = db.Column(db.String(25))
     # For Flask-Security
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
@@ -69,11 +69,15 @@ class Users(db.Model, UserMixin):
         return str('email: '+str(self.email)+', '+str(self.name)+' тел: '+str(self.phone))
 
     def prepare_json(self):
+        if not self.birthday:
+            birthday = None
+        else:
+            birthday = str(self.birthday)
         return {
             'email': str(self.email),
             'reg_date': str(self.reg_date),
             'name': str(self.name),
-            'birthday': self.birthday,
+            'birthday': birthday,
             'phone': str(self.phone)
         }
 
