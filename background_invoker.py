@@ -14,3 +14,10 @@ def delete_old_booking():
     Booking.query.filter(Booking.date_time_to < date_time_now).delete()
     db.session.commit()
     return True
+
+
+def delete_old_access_codes():
+    date_time_now = convert_utc_now_to_moscow()
+    UserRegAccessCode.query.filter(UserRegAccessCode.datetime < date_time_now).delete()
+    db.session.commit()
+    return True

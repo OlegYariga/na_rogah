@@ -64,10 +64,11 @@ security = Security(app, user_datastore)
 mail = Mail(app)
 
 # import function for delete old booking records from db
-from background_invoker import delete_old_booking
+from background_invoker import delete_old_booking, delete_old_access_codes
 # BackgroundScheduler
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=delete_old_booking, trigger="interval", seconds=30)
+scheduler.add_job(func=delete_old_access_codes, trigger="interval", seconds=30)
 scheduler.start()
 
 

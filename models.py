@@ -1,8 +1,8 @@
 import uuid
 import json
 import base64
-from datetime import datetime
-
+from datetime import datetime, timedelta
+from sqlalchemy import and_, or_, not_
 from flask import request, jsonify
 from werkzeug import secure_filename
 from flask_security import UserMixin, RoleMixin
@@ -286,9 +286,9 @@ class Booking(db.Model):
             'date_time_from': str(self.date_time_from),
             'date_time_to': str(self.date_time_to),
             'table_id': self.table_id,
-            'chair_type': str(table.chair_type),
+            'chair_type': table.chair_type,
             'chair_count': table.chair_count,
-            'position': str(table.position),
+            'position': table.position,
             'accepted': self.accepted
         }
 
@@ -308,38 +308,34 @@ class Timetable(db.Model):
         }
 
 
-class UserRegAccessCode:
-    def __init__(self):
-        self.user_reg_access_code = {}
+class UserRegAccessCode(db.Model):
+    user_access_id = db.Column(db.BigInteger, primary_key=True)
+    datetime = db.Column(db.DateTime, default=datetime.utcnow() + timedelta(hours=3))
+    email = db.Column(db.String(250))
+    code = db.Column(db.BigInteger)
 
     def find_user_reg_access_code(self, email, code):
-        try:
-            '''
-            for key, value in self.user_reg_access_code.items():
-                print(key, value)
-                if email == key and int(code) == int(value):
-                    print("FOUND")
-                    return True
-            return False
-            '''
-            code_find = int(self.user_reg_access_code.get(email))
-            print(code_find)
-            if int(code_find) == int(code):
+        #try:
+
+            user_accessed = UserRegAccessCode.query.filter(and_(UserRegAccessCode.email == str(email),
+                                                                UserRegAccessCode.code == int(code))).order_by(UserRegAccessCode.user_access_id.desc()).first()
+            if user_accessed:
                 return True
             return False
-        except Exception:
-            return False
+        #except Exception:
+            #return False
 
     def insert_user_reg_access_code(self, email, code):
         try:
-            self.user_reg_access_code[email] = code
-            print(self.user_reg_access_code.values())
+            user_access = UserRegAccessCode(datetime=datetime.utcnow() + timedelta(hours=3) + timedelta(minutes=10), email=str(email), code=code)
+            db.session.add(user_access)
+            db.session.commit()
         except Exception:
             return False
 
     def delete_user_reg_access_code(self, email):
         try:
-            u = self.user_reg_access_code.pop(email, None)
-            print(u)
+            #u = self.user_reg_access_code.pop(email, None)
+            print("oohps")
         except Exception:
             return False
