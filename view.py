@@ -234,7 +234,7 @@ def authorize():
 # Method to verify email
 @app.route(def_route+'/verify_email', methods=['POST'])
 def verify_email():
-    #try:
+    try:
         # Get data and convert them to JSON (ONLY email)
         data = request.data
         json_data = json.loads(data)
@@ -249,10 +249,10 @@ def verify_email():
         # Add code to UserAccessCode
         UserRegAccessCode().insert_user_reg_access_code(email=json_data['email'], code=code)
         return jsonify({'code': 200, 'desc': "Email was sent", 'email_code': code}), 200
-    #except KeyError:
-        #return jsonify({'code': 400, 'desc': "Bad request"}), 400
-    #except Exception:
-        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Bad request"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/test_auth', methods=['GET'])
@@ -263,7 +263,7 @@ def test_auth():
 
 @app.route(def_route+'/reg_user', methods=['POST'])
 def reg_user():
-    #try:
+    try:
         # Get data and convert into JSON (email, password, code
         data = request.data
         json_data = json.loads(data)
@@ -288,10 +288,10 @@ def reg_user():
                                     'email': str(user.email), 'access_token': access_token}), 200
             return jsonify({'code': 401, 'desc': "User already exists"}), 401
         return jsonify({'code': 422, 'desc': "Code incorrect"}), 422
-    #except KeyError:
-        #return jsonify({'code': 400, 'desc': "Key Error"}), 400
-    #except Exception:
-        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    except KeyError:
+        return jsonify({'code': 400, 'desc': "Key Error"}), 400
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/password_recovery', methods=['POST'])
@@ -464,55 +464,67 @@ def delete_user_booking():
 
 
 @app.route(def_route+'/view_user_credentials', methods=['POST'])
+@jwt_required
 def view_user_credentials():
-    data = request.data
-    json_data = json.loads(data)
-    if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
+    try:
+        data = request.data
+        json_data = json.loads(data)
         user = Users.query.filter(Users.email == str(json_data['email'])).first()
         if user:
             return jsonify({'data': user.prepare_json()}), 200
         return jsonify({'code': 404, 'desc': "User not found"}), 404
-    return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except ValueError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route(def_route+'/change_user_credentials', methods=['POST'])
+@jwt_required
 def change_user_credentials():
-    data = request.data
-    json_data = json.loads(data)
-    if (json_data['email'] in session) and (str(json_data['uuid']) == str(session[json_data['email']])):
+    try:
+        data = request.data
+        json_data = json.loads(data)
         if not json_data['new_email'] or json_data['new_email'] == "":
+            user = Users.query.filter(Users.email == str(json_data['email'])).first()
+            if user:
+                user.name = str(json_data['name'])
+                user.phone = str(json_data['phone'])
+                user.password = json_data['password']
+                user.birthday = json_data['birthday']
+                db.session.commit()
+                return jsonify({'code': 200, 'desc': "OK"}), 200
+            return jsonify({'code': 404, 'desc': "User not found"}), 404
+        else:
+            user_accessed = UserRegAccessCode().find_user_reg_access_code(email=json_data['new_email'],
+                                                                          code=json_data['code'])
+            if user_accessed:
+                new_user_exist = Users.query.filter(Users.email == json_data['new_email']).first()
                 user = Users.query.filter(Users.email == str(json_data['email'])).first()
-                if user:
+                # If there's such user in DB
+                if not new_user_exist and user:
+                    user.email = str(json_data['new_email'])
                     user.name = str(json_data['name'])
                     user.phone = str(json_data['phone'])
+                    user.password = json_data['password']
+                    user.birthday = json_data['birthday']
                     db.session.commit()
-                    return jsonify({'code': 200, 'desc': "OK"}), 200
-                return jsonify({'code': 404, 'desc': "User not found"}), 404
-        else:
-            if str(json_data['new_email']) in session:
-                # If code from email is correct
-                if str(json_data['code']) == str(session[json_data['new_email']]):
-                    new_user_exist = Users.query.filter(Users.email == json_data['new_email']).first()
-                    user = Users.query.filter(Users.email == str(json_data['email'])).first()
-                    # If there's such user in DB
-                    if not new_user_exist and user:
-                        user.email = str(json_data['new_email'])
-                        user.name = str(json_data['name'])
-                        db.session.commit()
-                        session.pop(str(json_data['email']))
-                        if user:
-                            # Generate unique identifier
-                            unique = str(uuid.uuid4())
-                            # Create new session with key <login> and unique value
-                            session[str(user.email)] = unique
-                            # Create a response
-                            return jsonify({'code': 200, 'desc': "OK",
-                                            'email': str(user.email), 'uuid': unique}), 200
-                    return jsonify({'code': 404, 'desc': "Current user not found or user with new_email already exists"}), 404
-                return jsonify({'code': 404, 'desc': "New email verify code is not valid"}), 404
-            return jsonify({'code': 404, 'desc': "New user email was not accepted yet (use /verify_email endpoint)"}), 404
-    return jsonify({'code': 401, 'desc': "Unauthorized"}), 401
-
+                    if user:
+                        # Generate token with JWT
+                        access_token = "Bearer " + create_access_token(identity=user.email, expires_delta=expires_jwt)
+                        # Create a response with access token
+                        return jsonify({'code': 200, 'desc': "Authorized",
+                                        'email': str(user.email), 'access_token': access_token}), 200
+                return jsonify({'code': 404, 'desc': "Current user not found or user with new_email already exists"}), 404
+            return jsonify({'code': 404, 'desc': "New email verify code is not valid"}), 404
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except ValueError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 
@@ -544,30 +556,31 @@ def index():
                             # Select email of user, created booking
                             user = Users.query.filter(Users.id == order_table.user_id).first()
                             # Create service headers
-                            mail_to = user.email
-                            subject = "Ресторан 'На Рогах'"
-                            # Select user's name
-                            user_name = user.name
-                            if not user_name:
-                                # If there's no name, create generalized greeting
-                                name = str("мы рады, что Вы пользуетесь нашим приложением")
-                            else:
-                                # Else, convert name to string
-                                name = str(user_name)
-                            # Select data, identifier, table's number, time_from and time_to
-                            ident = str(order_table.booking_id)
-                            num = str(order_table.table_id)
-                            b_date = str(order_table.date_time_from.strftime('%d.%m.%Y'))
-                            b_time_from = str(order_table.date_time_from.strftime('%H:%M'))
-                            b_time_to = str(order_table.date_time_to.strftime('%H:%M'))
-                            # Insert data to message body in HTML
-                            body = """
-                            <h1><b>Здравствуйте, """+name+"""!</b></h1>
-                            <p>Вы успешно забронировали стол <b>№ """+num+"""</b> на <b>"""+b_date+"""</b> с <b>"""+b_time_from+"""</b> до <b>"""+b_time_to+"""</b>. Номер Вашего заказа - <b>"""+ident+"""</b></p>
-                            <p>Мы с радостью ждем Вас в гости!</p>
-                            """
-                            # Send email
-                            send_mail(mail_to, subject, body)
+                            if user:
+                                mail_to = user.email
+                                subject = "Ресторан 'На Рогах'"
+                                # Select user's name
+                                user_name = user.name
+                                if not user_name:
+                                    # If there's no name, create generalized greeting
+                                    name = str("мы рады, что Вы пользуетесь нашим приложением")
+                                else:
+                                    # Else, convert name to string
+                                    name = str(user_name)
+                                # Select data, identifier, table's number, time_from and time_to
+                                ident = str(order_table.booking_id)
+                                num = str(order_table.table_id)
+                                b_date = str(order_table.date_time_from.strftime('%d.%m.%Y'))
+                                b_time_from = str(order_table.date_time_from.strftime('%H:%M'))
+                                b_time_to = str(order_table.date_time_to.strftime('%H:%M'))
+                                # Insert data to message body in HTML
+                                body = """
+                                <h1><b>Здравствуйте, """+name+"""!</b></h1>
+                                <p>Вы успешно забронировали стол <b>№ """+num+"""</b> на <b>"""+b_date+"""</b> с <b>"""+b_time_from+"""</b> до <b>"""+b_time_to+"""</b>. Номер Вашего заказа - <b>"""+ident+"""</b></p>
+                                <p>Мы с радостью ждем Вас в гости!</p>
+                                """
+                                # Send email
+                                send_mail(mail_to, subject, body)
             # If was pressed 'delete' button
             if request.form['index'] == "1":
                 # Select id of record, where button was pressed
@@ -674,11 +687,6 @@ def view_booking():
     return render_template('view_booking.html', flights=flights)
 
 
-
-
-
-
-
 # Function to send email
 def send_mail(mail_to, subject, text):
     try:
@@ -694,17 +702,3 @@ def send_mail(mail_to, subject, text):
         return False
     except Exception:
         return False
-
-
-#
-# ############ FUNCTIONS REQUERES MODIFICATION #######
-#
-# I NEED TO CHANGE IT A LITTLE BIT
-
-
-# Checks correct session data
-def log_required(login, unique):
-    if login in session:
-        if session[login] == unique:
-            return True
-    return False
