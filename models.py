@@ -73,7 +73,7 @@ class Users(db.Model, UserMixin):
             'email': str(self.email),
             'reg_date': str(self.reg_date),
             'name': str(self.name),
-            'birthday' :str(self.birthday),
+            'birthday': self.birthday,
             'phone': str(self.phone)
         }
 
