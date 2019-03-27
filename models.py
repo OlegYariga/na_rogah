@@ -146,7 +146,7 @@ class Menu(db.Model):
         sub_menu = SubMenu.query.filter(self.item_id == SubMenu.item_id).all()
         sub_menu_list = []
         for sub_menu_item in sub_menu:
-            sub_menu_list.append(sub_menu_item.prepare_json())
+            sub_menu_list.append(sub_menu_item.prepare_json(self.name))
         return {
             'item_id': self.item_id,
             'class_name': _class.name,
@@ -203,8 +203,9 @@ class SubMenu(db.Model):
     weight = db.Column(db.String(36))
     price = db.Column(db.Integer)
 
-    def prepare_json(self):
+    def prepare_json(self, parent_name):
         return {
+            'parent_name': parent_name,
             'name': self.name,
             'weight': self.weight,
             'price': self.price
