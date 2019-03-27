@@ -648,6 +648,7 @@ def view_booking():
             date_booking = request.form['date_booking']
         # If was pressed 'delete' button
         if request.form['index'] == "1":
+            date_booking = request.form['del_date']
             # Select id of record, where button was pressed
             booking_delete = request.form['booking_delete']
             if booking_delete:
@@ -691,8 +692,8 @@ def view_booking():
                 # Append list with the dictionary and clear dictionary
                 flights.append(flights_keys)
                 flights_keys = {}
-
-    return render_template('view_booking.html', flights=flights)
+    date = date_booking
+    return render_template('view_booking.html', flights=flights, date=date)
 
 
 # Function to send email

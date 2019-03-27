@@ -1,8 +1,9 @@
 <!-- /templates/index.html  -->
-
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     {% extends 'base.html' %}
 
     {% block content %}
+
 <p></p>
 
 <ul class="nav nav-tabs">
@@ -18,19 +19,20 @@
 </ul>
 
 <p></p>
-                <form action="" method="POST" name="booking">
+                <form action="" method="POST" name="booking" id='voting_form'>
                                     <div class="d-flex justify-content-center">
                                         <input type="hidden" name="index" value="0">
                                         <div class="input-group mb-3">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text" id="basic-addon1">Дата бронирования</span>
                                             </div>
-                                            <input type="date" id="date_booking" name="date_booking" class="form-control" placeholder="Введите дату бронирования" aria-label="Username" aria-describedby="basic-addon1" value="20.03.2019">
-                                            <button id="button_load_date" class="btn btn-outline-primary" style="width:150px;">Загрузить</button>
+                                            <input onchange='document.getElementById("voting_form").submit();' type="date" id="date_booking" name="date_booking" class="form-control" placeholder="Введите дату бронирования" aria-label="Username" aria-describedby="basic-addon1" value="{{date}}">
+                                            <button id="button_load_date" class="btn btn-outline-primary" style="width:150px; display: none;">Загрузить</button>
+
                                         </div>
                                     </div>
                 </form>
-
+ {% if flights %}
                 <table class="table table-bordered" id="flights">
                     <thead class="thead-light">
                         <tr>
@@ -60,6 +62,7 @@
                                 <form action="" method="POST" name="del">
                                     <div class="d-flex justify-content-center">
                                     <input type="hidden" name="index" value="1">
+                                        <input type="hidden" value="{{date}}" name="del_date">
                                     <input type="hidden" name="booking_delete"  value = {{flight.booking_id }}>
                                     <button class="btn btn-outline-danger" style="width:150px;" onclick="return confirm('Вы точно хотите удалить запись о бронировании из списка?')">Удалить</button>
                                     </div>
@@ -71,9 +74,16 @@
 
                     </tbody>
                 </table>
+{% else %}
+<div class="alert alert-success" role="alert">
+    <div align="center">
+        На выбранный день ни один столик не забронирован!
+    </div>
+</div>
+{% endif %}
+
 
 <script>
-
     setTimeout(function(){
     location.reload();
 }, 10000);

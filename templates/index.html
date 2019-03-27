@@ -18,7 +18,7 @@
 </ul>
 
 <p></p>
-
+ {% if flights %}
                 <table class="table table-bordered" id="flights">
                     <thead class="thead-light">
                         <tr>
@@ -68,6 +68,13 @@
 
                     </tbody>
                 </table>
+{% else %}
+<div class="alert alert-success" role="alert">
+    <div align="center">
+        Ни одной новой записи о бронировании!
+    </div>
+</div>
+{% endif %}
 
 <script>
 
