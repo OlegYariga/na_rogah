@@ -34,12 +34,13 @@ class MenuAdminView(BaseModelView):
     }
     # Add necessary fields ( because we need to hide 'photo' field
     form_columns = ['Category', 'name', 'price', 'desc_short', 'desc_long', 'weight',
-                    'recommended', 'file']
+                    'recommended', 'sub_menu', 'file']
     column_list = ['item_id', 'name', 'price', 'desc_short', 'desc_long', 'weight',
                    'recommended', 'photo', 'Category']
     column_labels = dict(item_id='Идентификатор', name='Название блюда', price='Цена', desc_short='Краткое описание',
                          desc_long='Подробное опиасание', weight='Вес',
-                         recommended='Рекоменд. блюда', photo='URL фотографии', Category='Категория')
+                         recommended='Рекоменд. блюда', photo='URL фотографии',
+                         Category='Категория', sub_menu='Элементы подменю')
 
     def on_model_change(self, form, model, is_created):
         item_name = request.form['name']
@@ -59,6 +60,10 @@ class MenuAdminView(BaseModelView):
         # Update LastUpdate in Db
         LastUpdate().update_db()
         return super(MenuAdminView, self).on_model_delete(model)
+
+
+class SubMenuAdminView(BaseModelView):
+    pass
 
 
 class CategoryAdminView(BaseModelView):

@@ -139,9 +139,14 @@ class Menu(db.Model):
     recommended = db.Column(db.String(64))
     image = db.relationship('Images', backref='menu', uselist=False)
     delivery = db.Column(db.Boolean, default=True)
+    sub_menu = db.relationship('SubMenu', backref='Menu', lazy='dynamic')
 
     def prepare_json(self):
         _class = Category.query.filter(Category.category_id == self.category_id).first()
+        sub_menu = SubMenu.query.filter(self.item_id == SubMenu.item_id).all()
+        sub_menu_list = []
+        for sub_menu_item in sub_menu:
+            sub_menu_list.append(sub_menu_item.prepare_json())
         return {
             'item_id': self.item_id,
             'class_name': _class.name,
@@ -152,7 +157,8 @@ class Menu(db.Model):
             'desc_long': self.desc_long,
             'weight': self.weight,
             'recommended': self.recommended,
-            'delivery': self.delivery
+            'delivery': self.delivery,
+            'sub_menu': json.loads(json.dumps(sub_menu_list))
         }
 
     def load_image(self):
@@ -188,6 +194,24 @@ class Menu(db.Model):
 
     def __repr__(self):
         return self.name
+
+
+class SubMenu(db.Model):
+    sub_menu_id = db.Column(db.BigInteger, primary_key=True)
+    item_id = db.Column(db.BigInteger, db.ForeignKey(Menu.item_id))
+    name = db.Column(db.String(28), nullable=False)
+    weight = db.Column(db.String(36))
+    price = db.Column(db.Integer)
+
+    def prepare_json(self):
+        return {
+            'name': self.name,
+            'weight': self.weight,
+            'price': self.price
+        }
+
+    def __repr__(self):
+        return str(self.name)
 
 
 # Class stores photos

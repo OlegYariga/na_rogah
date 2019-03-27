@@ -51,6 +51,7 @@ admin.add_view(TimetableAdminView(Timetable, db.session, name='Расписан�
 admin.add_view(TablesAdminView(Tables, db.session, name='Столы'))
 admin.add_view(CategoryAdminView(Category, db.session, name='Категории'))
 admin.add_view(MenuAdminView(Menu, db.session, name='Меню'))
+admin.add_view(SubMenuAdminView(SubMenu, db.session, name='Подменю'))
 admin.add_view(UsersAdminView(Users, db.session, name='Пользователи'))
 admin.add_view(BookingAdminView(Booking, db.session, name='Бронирование'))
 #logout link
