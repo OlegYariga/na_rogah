@@ -5,6 +5,7 @@ from flask_admin import AdminIndexView
 from wtforms import validators
 from sqlalchemy import and_
 from models import *
+from flask import Markup
 
 
 # Create class, defining access roles and redirect to login page
@@ -39,7 +40,7 @@ class MenuAdminView(BaseModelView):
                    'recommended', 'photo', 'Category']
     column_labels = dict(item_id='Идентификатор', name='Название блюда', price='Цена', desc_short='Краткое описание',
                          desc_long='Подробное опиасание', weight='Вес',
-                         recommended='Рекоменд. блюда', photo='URL фотографии',
+                         recommended='Рекоменд. блюда', photo='Фотография',
                          Category='Категория', sub_menu='Элементы подменю')
 
     def on_model_change(self, form, model, is_created):
@@ -61,6 +62,17 @@ class MenuAdminView(BaseModelView):
         LastUpdate().update_db()
         return super(MenuAdminView, self).on_model_delete(model)
 
+    def _user_formatter(view, context, model, name):
+        return Markup(
+            u"<a href='%s' target='_blank'>%s</a>" % (
+                model.photo,
+                "Фотография"
+            )
+        ) if model.photo else u"Нет фото"
+
+    column_formatters = {
+        'photo': _user_formatter
+    }
 
 class SubMenuAdminView(BaseModelView):
     pass
