@@ -754,66 +754,68 @@ def reg_booking():
 
         date_time_from = str(date_from) + " " + str(time_hours_from) + ":" + str(time_minutes_from)
         date_time_to = str(date_to) + " " + str(time_hours_to) + ":" + str(time_minutes_to)
-        if datetime.strptime(date_time_from, "%Y-%m-%d %H:%M") < datetime.strptime(date_time_to, "%Y-%m-%d %H:%M"):
+        if (datetime.strptime(date_time_to, "%Y-%m-%d %H:%M") - datetime.strptime(date_time_from, "%Y-%m-%d %H:%M")) <= timedelta(hours=4):
+            if datetime.strptime(date_time_from, "%Y-%m-%d %H:%M") < datetime.strptime(date_time_to, "%Y-%m-%d %H:%M"):
 
-            booking_week_day = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").weekday()
-            timetable = None
-            if booking_week_day == 0:
-                timetable = Timetable.query.filter(Timetable.week_day == "пн").first()
-            elif booking_week_day == 1:
-                timetable = Timetable.query.filter(Timetable.week_day == "вт").first()
-            elif booking_week_day == 2:
-                timetable = Timetable.query.filter(Timetable.week_day == "ср").first()
-            elif booking_week_day == 3:
-                timetable = Timetable.query.filter(Timetable.week_day == "чт").first()
-            elif booking_week_day == 4:
-                timetable = Timetable.query.filter(Timetable.week_day == "пт").first()
-            elif booking_week_day == 5:
-                timetable = Timetable.query.filter(Timetable.week_day == "сб").first()
-            elif booking_week_day == 6:
-                timetable = Timetable.query.filter(Timetable.week_day == "вс").first()
-            if timetable:
-                str_date_time_from = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").time()
-                str_date_time_to = datetime.strptime(date_time_to, "%Y-%m-%d %H:%M").time()
-                print("Время начала из формы: ", str_date_time_from)
-                print("Время окончания из формы: ", str_date_time_to)
-                print("Время начала из формы: ", timetable.time_from)
-                print("Время окончания из формы: ", timetable.time_to)
+                booking_week_day = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").weekday()
+                timetable = None
+                if booking_week_day == 0:
+                    timetable = Timetable.query.filter(Timetable.week_day == "пн").first()
+                elif booking_week_day == 1:
+                    timetable = Timetable.query.filter(Timetable.week_day == "вт").first()
+                elif booking_week_day == 2:
+                    timetable = Timetable.query.filter(Timetable.week_day == "ср").first()
+                elif booking_week_day == 3:
+                    timetable = Timetable.query.filter(Timetable.week_day == "чт").first()
+                elif booking_week_day == 4:
+                    timetable = Timetable.query.filter(Timetable.week_day == "пт").first()
+                elif booking_week_day == 5:
+                    timetable = Timetable.query.filter(Timetable.week_day == "сб").first()
+                elif booking_week_day == 6:
+                    timetable = Timetable.query.filter(Timetable.week_day == "вс").first()
+                if timetable:
+                    str_date_time_from = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").time()
+                    str_date_time_to = datetime.strptime(date_time_to, "%Y-%m-%d %H:%M").time()
+                    print("Время начала из формы: ", str_date_time_from)
+                    print("Время окончания из формы: ", str_date_time_to)
+                    print("Время начала из расписания: ", timetable.time_from)
+                    print("Время окончания из расписания: ", timetable.time_to)
+                    if str_date_time_from >= timetable.time_from:
+                        forbidden = Booking.query.filter(and_(table == Booking.table_id,
+                                                              and_((
+                                                                  or_(Booking.date_time_from >= date_time_from,
+                                                                      Booking.date_time_to >= date_time_from)),
+                                                                  or_(Booking.date_time_from <= date_time_to,
+                                                                      Booking.date_time_to <= date_time_to))
+                                                              )).all()
+                        if not forbidden:
 
-                if str_date_time_from >= timetable.time_from and str_date_time_to <= timetable.time_to:
-                    forbidden = Booking.query.filter(and_(table == Booking.table_id,
-                                                          and_((
-                                                              or_(Booking.date_time_from >= date_time_from,
-                                                                  Booking.date_time_to >= date_time_from)),
-                                                              or_(Booking.date_time_from <= date_time_to,
-                                                                  Booking.date_time_to <= date_time_to))
-                                                          )).all()
-                    if not forbidden:
-
-                        email = str(uuid.uuid4())+"@mail.ru"
-                        password = email
-                        user = Users(email=email, password=password, name=name, phone=phone)
-                        db.session.add(user)
-                        db.session.commit()
-                        user = Users.query.filter(Users.email == email).first()
-                        is_table = Tables.query.filter(Tables.table_id == table).first()
-
-                        if user and is_table:
-                            booking = Booking(date_time_from=date_time_from, date_time_to=date_time_to, user_id=user.id,
-                                              table_id=table, accepted=True)
-                            db.session.add(booking)
+                            email = str(uuid.uuid4())+"@mail.ru"
+                            password = email
+                            user = Users(email=email, password=password, name=name, phone=phone)
+                            db.session.add(user)
                             db.session.commit()
-                            ans = 0
+                            user = Users.query.filter(Users.email == email).first()
+                            is_table = Tables.query.filter(Tables.table_id == table).first()
+
+                            if user and is_table:
+                                booking = Booking(date_time_from=date_time_from, date_time_to=date_time_to, user_id=user.id,
+                                                  table_id=table, accepted=True)
+                                db.session.add(booking)
+                                db.session.commit()
+                                ans = 0
+                            else:
+                                ans = 1
                         else:
-                            ans = 1
+                            ans = 4
                     else:
-                        ans = 4
+                       ans = 5
                 else:
-                   ans = 5
+                    ans = 5
             else:
-                ans = 5
+                ans = 2
         else:
-            ans = 2
+            ans = 6
 
     return render_template('reg_booking.html', ans=ans)
 
