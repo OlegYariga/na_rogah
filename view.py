@@ -32,7 +32,7 @@ expires_jwt = timedelta(minutes=1000)
 @app.before_request
 def make_session_permanent():
     session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=5)
+    app.permanent_session_lifetime = timedelta(minutes=300)
 
 
 # Returns all dish categories (in array)
@@ -448,9 +448,16 @@ def delete_user_booking():
         json_data = json.loads(data)
         user = Users.query.filter(Users.email == str(json_data['email'])).first()
         if user:
+            bbk = Booking.query.filter(and_(Booking.user_id == int(user.id),
+                                                 Booking.booking_id == int(json_data['booking_id'])
+                                                 )).all()
             bookings = Booking.query.filter(and_(Booking.user_id == int(user.id),
                                                  Booking.booking_id == int(json_data['booking_id'])
                                                  )).delete()
+            for booking in bbk:
+                deleted_booking = DeletedBooking(date_time_from=booking.date_time_from, date_time_to=booking.date_time_to,
+                                                 user_id=user.id, table_id=booking.table_id)
+                db.session.add(deleted_booking)
             db.session.commit()
             if not bookings == 0:
                 return jsonify({'code': 200, 'desc': "OK"}), 200
@@ -633,7 +640,6 @@ def index():
         #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-
 @app.route("/view_booking", methods=['GET', 'POST'])
 @login_required
 def view_booking():
@@ -655,6 +661,14 @@ def view_booking():
                 # Delete such record from DB. If there's no records - do nothing
                 Booking.query.filter(Booking.booking_id == booking_delete).delete()
                 db.session.commit()
+        if request.form['index'] == "10":
+            date_booking = request.form['del_date']
+            # Select id of record, where button was pressed
+            booking_delete = request.form['deleted_booking_confirm']
+            if booking_delete:
+                # Delete such record from DB. If there's no records - do nothing
+                DeletedBooking.query.filter(DeletedBooking.booking_id == booking_delete).delete()
+                db.session.commit()
     if request.method == 'GET':
         date_time_now_utc = datetime.utcnow()
         date_time_moscow_now = date_time_now_utc + timedelta(hours=3)
@@ -662,6 +676,31 @@ def view_booking():
         date_booking = str(date_time_moscow_now)
     # MAIN PART
     booking = Booking.query.filter((Booking.accepted == True)).all()
+    deleted_booking = DeletedBooking.query.all()
+    del_book_keys = {}
+    del_book_list = []
+
+    for del_book in deleted_booking:
+        #print(del_book)
+        date_from = datetime.strftime(del_book.date_time_from, "%d.%m.%Y")
+        time_from = datetime.strftime(del_book.date_time_from, "%H:%M")
+        date_to = datetime.strftime(del_book.date_time_to, "%d.%m.%Y")
+        time_to = datetime.strftime(del_book.date_time_to, "%H:%M")
+        if date_booking:
+            date_booking_str = datetime.strptime(date_booking, "%Y-%m-%d")
+            date_booking_date = datetime.strftime(date_booking_str, "%d.%m.%Y")
+        if date_booking_date:
+            if date_from == date_booking_date:
+                user = Users.query.filter(Users.id == del_book.user_id).first()
+                del_book_keys['user_name'] = user.name
+                del_book_keys['user_phone'] = user.phone
+
+                del_book_keys['booking_id'] = del_book.booking_id
+                del_book_keys['date_from'] = date_from
+                del_book_keys['time_from'] = time_from
+                del_book_keys['time_to'] = time_to
+                del_book_keys['table_id'] = del_book.table_id
+                del_book_list.append(del_book_keys)
 
     flights_keys = {}
     flights = []
@@ -693,7 +732,90 @@ def view_booking():
                 flights.append(flights_keys)
                 flights_keys = {}
     date = date_booking
-    return render_template('view_booking.html', flights=flights, date=date)
+    return render_template('view_booking.html', flights=flights, date=date, del_book_list=del_book_list)
+
+
+@app.route("/reg_booking", methods=['GET', 'POST'])
+@login_required
+def reg_booking():
+    # variable to store errors, if they are and 0, if there're no errors
+    ans = 3
+    # If something was POSTed
+    if request.method == 'POST':
+        name = request.form['inputName']
+        phone = request.form['InputPhone']
+        date_from = request.form['InputDateFrom']
+        time_hours_from = request.form['InputTimeHoursFrom']
+        time_minutes_from = request.form['InputTimeMinutesFrom']
+        time_hours_to = request.form['InputTimeHoursTo']
+        time_minutes_to = request.form['InputTimeMinutesTo']
+        date_to = request.form['InputDateTo']
+        table = request.form['InputTableNum']
+
+        date_time_from = str(date_from) + " " + str(time_hours_from) + ":" + str(time_minutes_from)
+        date_time_to = str(date_to) + " " + str(time_hours_to) + ":" + str(time_minutes_to)
+        if datetime.strptime(date_time_from, "%Y-%m-%d %H:%M") < datetime.strptime(date_time_to, "%Y-%m-%d %H:%M"):
+
+            booking_week_day = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").weekday()
+            timetable = None
+            if booking_week_day == 0:
+                timetable = Timetable.query.filter(Timetable.week_day == "пн").first()
+            elif booking_week_day == 1:
+                timetable = Timetable.query.filter(Timetable.week_day == "вт").first()
+            elif booking_week_day == 2:
+                timetable = Timetable.query.filter(Timetable.week_day == "ср").first()
+            elif booking_week_day == 3:
+                timetable = Timetable.query.filter(Timetable.week_day == "чт").first()
+            elif booking_week_day == 4:
+                timetable = Timetable.query.filter(Timetable.week_day == "пт").first()
+            elif booking_week_day == 5:
+                timetable = Timetable.query.filter(Timetable.week_day == "сб").first()
+            elif booking_week_day == 6:
+                timetable = Timetable.query.filter(Timetable.week_day == "вс").first()
+            if timetable:
+                str_date_time_from = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").time()
+                str_date_time_to = datetime.strptime(date_time_to, "%Y-%m-%d %H:%M").time()
+                print("Время начала из формы: ", str_date_time_from)
+                print("Время окончания из формы: ", str_date_time_to)
+                print("Время начала из формы: ", timetable.time_from)
+                print("Время окончания из формы: ", timetable.time_to)
+
+                if str_date_time_from >= timetable.time_from and str_date_time_to <= timetable.time_to:
+                    forbidden = Booking.query.filter(and_(table == Booking.table_id,
+                                                          and_((
+                                                              or_(Booking.date_time_from >= date_time_from,
+                                                                  Booking.date_time_to >= date_time_from)),
+                                                              or_(Booking.date_time_from <= date_time_to,
+                                                                  Booking.date_time_to <= date_time_to))
+                                                          )).all()
+                    if not forbidden:
+
+                        email = str(uuid.uuid4())+"@mail.ru"
+                        password = email
+                        user = Users(email=email, password=password, name=name, phone=phone)
+                        db.session.add(user)
+                        db.session.commit()
+                        user = Users.query.filter(Users.email == email).first()
+                        is_table = Tables.query.filter(Tables.table_id == table).first()
+
+                        if user and is_table:
+                            booking = Booking(date_time_from=date_time_from, date_time_to=date_time_to, user_id=user.id,
+                                              table_id=table, accepted=True)
+                            db.session.add(booking)
+                            db.session.commit()
+                            ans = 0
+                        else:
+                            ans = 1
+                    else:
+                        ans = 4
+                else:
+                   ans = 5
+            else:
+                ans = 5
+        else:
+            ans = 2
+
+    return render_template('reg_booking.html', ans=ans)
 
 
 # Function to send email

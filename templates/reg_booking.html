@@ -1,0 +1,136 @@
+<!-- /templates/index.html  -->
+
+    {% extends 'base.html' %}
+
+    {% block content %}
+{% if ans == 0 %}
+<div class="alert alert-primary" role="alert">
+  Запись о бронировании добавлена успешно!
+</div>
+{% elif ans == 1 %}
+<div class="alert alert-danger" role="alert">
+  Указанный стол не существует!
+</div>
+{% elif ans == 2 %}
+<div class="alert alert-danger" role="alert">
+  Время начала брони должно быть меньше времени окончания!
+</div>
+{% elif ans == 4 %}
+<div class="alert alert-danger" role="alert">
+  Выбранный стол уже забронирован на это время!
+</div>
+{% elif ans == 5 %}
+<div class="alert alert-danger" role="alert">
+  В выбранное время ресторан не работает!
+</div>
+{% endif %}
+<p></p>
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link" href="/">Подтверждение бронирования</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="/view_booking">Все брони</a>
+  </li>
+    <li class="nav-item">
+    <a class="nav-link active" href="">Бронирование столика</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="/admin">Администрирование</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="/logout">Выход</a>
+  </li>
+</ul>
+
+<p></p>
+<div style="margin-left: 30%; margin-right: 30%;">
+<form name="reg_user" method="POST">
+    <div class="form-group">
+    <label for="InputName">Имя пользователя</label>
+    <input name="inputName" id="InputName" class="form-control" type="text" placeholder="Артём" required>
+  </div>
+    <div class="form-group">
+    <label for="InputPhone">Телефон пользователя</label>
+    <input name="InputPhone" id="InputPhone" class="form-control" type="text" pattern="8[0-9]{10}"  placeholder="89212345678" required>
+
+  </div>
+  <label style="vertical-align: bottom;"  for="InputDateFrom">Начало брони</label>
+    <div class="form-group" style="display: flex;">
+    <input style="height: 40px;" name="InputDateFrom" id="InputDateFrom" class="form-control" type="date" placeholder="Введите дату начала брони" required>
+      <select style="height: 40px;" class="form-control" id="exampleFormControlSelect1" name="InputTimeHoursFrom" required>
+      <option selected>00</option>
+        <option>01</option>
+      <option>02</option>
+        <option>03</option>
+      <option>04</option>
+        <option>05</option>
+      <option>06</option>
+        <option>07</option>
+      <option>08</option>
+        <option>09</option>
+      <option>10</option>
+        <option>11</option>
+      <option>12</option>
+        <option>13</option>
+      <option>14</option>
+        <option>15</option>
+      <option>16</option>
+        <option>17</option>
+      <option>18</option>
+        <option>19</option>
+      <option>20</option>
+        <option>21</option>
+      <option>22</option>
+        <option>23</option>
+    </select>
+      <select style="height: 40px;" class="form-control" id="select_minutes" name="InputTimeMinutesFrom" required>
+      <option selected>00</option>
+        <option>30</option>
+      </select>
+  </div>
+
+    <label for="InputDateTo">Окончание брони</label>
+    <div class="form-group" style="display: flex;">
+    <input name="InputDateTo" id="InputDateTo" class="form-control" type="date" placeholder="Введите дату и время окончания брони" required>
+  <select style="height: 40px;" class="form-control" id="select_to_hours" name="InputTimeHoursTo" required>
+      <option selected>00</option>
+        <option>01</option>
+      <option>02</option>
+        <option>03</option>
+      <option>04</option>
+        <option>05</option>
+      <option>06</option>
+        <option>07</option>
+      <option>08</option>
+        <option>09</option>
+      <option>10</option>
+        <option>11</option>
+      <option>12</option>
+        <option>13</option>
+      <option>14</option>
+        <option>15</option>
+      <option>16</option>
+        <option>17</option>
+      <option>18</option>
+        <option>19</option>
+      <option>20</option>
+        <option>21</option>
+      <option>22</option>
+        <option>23</option>
+    </select>
+      <select style="height: 40px;" class="form-control" id="select_to_minutes" name="InputTimeMinutesTo" required>
+      <option selected>00</option>
+        <option>30</option>
+      </select>
+    </div>
+    <div class="form-group">
+    <label for="InputTableNum">№ стола</label>
+    <input name="InputTableNum" id="InputTableNum" class="form-control" type="number" placeholder="10" required>
+  </div>
+
+
+  <button type="submit" class="btn btn-primary">Добавить</button>
+</form>
+  </div>
+    {% endblock %}

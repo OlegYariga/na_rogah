@@ -3,7 +3,7 @@ import os
 
 class Configuration(object):
     # Flask-configuration settings
-    DEBUG = False
+    DEBUG = True
     # DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = 'somethimngverysercrettext'

@@ -323,6 +323,15 @@ class Booking(db.Model):
         }
 
 
+class DeletedBooking(db.Model):
+    booking_id = db.Column(db.BigInteger, primary_key=True)
+    date_time_from = db.Column(db.DateTime)
+    date_time_to = db.Column(db.DateTime)
+    user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'))
+    table_id = db.Column(db.BigInteger, db.ForeignKey('tables.table_id'))
+    accepted = db.Column(db.Boolean, default=False)
+
+
 class Timetable(db.Model):
     timetable_id = db.Column(db.BigInteger, primary_key=True)
     week_day = db.Column(db.Enum('пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс',

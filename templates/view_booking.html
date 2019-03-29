@@ -1,10 +1,47 @@
 <!-- /templates/index.html  -->
 <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     {% extends 'base.html' %}
-
+<style>
+    table.text  {
+    width:  100%; /* Ширина таблицы */
+    border-spacing: 0; /* Расстояние между ячейками */
+   }
+   table.text td {
+    width: 50%; /* Ширина ячеек */
+    vertical-align: top; /* Выравнивание по верхнему краю */
+   }
+   td.rightcol { /* Правая ячейка */
+    text-align: right; /* Выравнивание по правому краю */
+   }
+</style>
     {% block content %}
 
 <p></p>
+
+{% for del_book in del_book_list %}
+    <div class="alert alert-danger" role="alert" style="height: 65px;">
+        <table>
+            <tr>
+                <td><strong>ОТМЕНА БРОНИРОВАНИЯ</strong>. Пользователь: <u>{{del_book.user_name}}</u>
+                    Телефон: <u>{{del_book.user_phone}}</u>
+                    №: <u> {{del_book.booking_id}} </u>
+                    Дата бронирования: <u>{{del_book.date_from}}</u>
+                c <u>{{del_book.time_from}}</u> по <u>{{del_book.time_to}}</u>
+                    № стола: <u>{{del_book.table_id}}</u>
+                </td>
+                <td style="position: absolute; right: 10;">
+                    <form action="" method="POST" name="del_del_book">
+                        <input type="hidden" name="index" value="10">
+                        <input type="hidden" value="{{date}}" name="del_date">
+                        <input type="hidden" name="deleted_booking_confirm"  value = {{del_book.booking_id }}>
+                        <button class="btn btn-outline-danger" onclick="return confirm('Вы точно хотите удалить запись о бронировании из списка?')">X</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+{% endfor %}
 
 <ul class="nav nav-tabs">
   <li class="nav-item">
@@ -12,6 +49,12 @@
   </li>
   <li class="nav-item">
     <a class="nav-link active" href="">Все брони</a>
+  </li>
+    <li class="nav-item">
+    <a class="nav-link" href="/reg_booking">Бронирование столика</a>
+  </li>
+    <li class="nav-item">
+    <a class="nav-link" href="/admin">Администрирование</a>
   </li>
   <li class="nav-item">
     <a class="nav-link" href="/logout">Выход</a>
