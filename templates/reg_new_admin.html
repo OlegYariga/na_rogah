@@ -1,0 +1,76 @@
+<!-- /templates/index.html  -->
+
+    {% extends 'base.html' %}
+
+    {% block content %}
+{% if ans == 1 %}
+<div class="alert alert-primary" role="alert">
+  Новый пользователь добавлен успешно!
+</div>
+{% elif ans == 2 %}
+<div class="alert alert-danger" role="alert">
+  Такой пользователь уже существует!
+</div>
+{% elif ans == 3 %}
+<div class="alert alert-danger" role="alert">
+  Пароли не совпадают!
+</div>
+{% endif %}
+<p></p>
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link" href="/">Подтверждение бронирования</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="view_booking">Все брони</a>
+  </li>
+    <li class="nav-item">
+    <a class="nav-link" href="/reg_booking">Бронирование столика</a>
+  </li>
+    <li class="nav-item">
+    <a class="nav-link active" href="">Регистрация нового пользователя</a>
+  </li>
+    <li class="nav-item">
+    <a class="nav-link" href="/admin">Администрирование</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="/logout">Выход</a>
+  </li>
+</ul>
+
+<p></p>
+{% if access %}
+<div style="margin-left: 30%; margin-right: 30%;">
+<form name="reg_user" method="POST">
+  <div class="form-group">
+    <label for="InputEmail">Email пользователя</label>
+    <input name="InputEmail" id="InputEmail" class="form-control" type="email" placeholder="my_mail@yandex.ru" required>
+  </div>
+
+  <div class="form-group">
+    <label for="InputPassword">Пароль</label>
+    <input name="InputPassword" id="InputPassword" class="form-control" type="password" placeholder="********" required>
+  </div>
+  <div class="form-group">
+    <label for="InputPasswordAgane">Повторите пароль</label>
+    <input name="InputPasswordAgane" id="InputPasswordAgane" class="form-control" type="password" placeholder="********" required>
+  </div>
+
+  <div class="form-group">
+    <label for="InputName">Имя</label>
+    <input name="inputName" id="InputName" class="form-control" type="text" placeholder="Артём">
+  </div>
+  <div class="form-group">
+    <label for="InputPhone">Телефон пользователя</label>
+    <input name="InputPhone" id="InputPhone" class="form-control" type="text" pattern="8[0-9]{10}"  placeholder="89212345678">
+  </div>
+
+  <button type="submit" class="btn btn-primary">Добавить</button>
+</form>
+  </div>
+{% else %}
+<div class="alert alert-danger" role="alert">
+  Доступ запрещен! У вас нет прав для просмотра этой страницы. Пожалуйста, авторизуйтесь с учетными данными администратора.
+</div>
+{% endif %}
+    {% endblock %}

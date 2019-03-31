@@ -1,6 +1,7 @@
 import uuid
 import base64
 import json
+from hashlib import sha256
 from random import randint
 from datetime import timedelta, time, date
 
@@ -15,6 +16,8 @@ from models import LastUpdate
 from models import Category, Menu, Images
 from app import *
 from app import mail
+from sendmail import send_mail
+from flask_security import current_user
 
 from flask_jwt_extended import (create_access_token,
                                 create_refresh_token,
@@ -215,8 +218,9 @@ def authorize():
         # Get data and convert them to JSON
         json_data = json.loads(request.data)
         # Select record from DB, where email==email and password==password
+        passw = sha256(str(json_data['password']).encode('utf-8')).hexdigest()
         user = Users.query.filter(and_(Users.email == json_data['email'],
-                                       Users.password == json_data['password'])).first()
+                                       Users.password == passw)).first()
         if user:
             # Generate token with JWT
             access_token = "Bearer "+create_access_token(identity=user.email, expires_delta=expires_jwt)
@@ -242,10 +246,10 @@ def verify_email():
         subject = "'На Рогах' подтверждение E-mail"
         recipient = json_data['email']
         body = 'Добро пожаловать в ресторан "На Рогах"! Ваш код подтверждения - ' + code
-        # Send mail
-        send_mail(recipient, subject, body)
         # Add code to UserAccessCode
         UserRegAccessCode().insert_user_reg_access_code(email=json_data['email'], code=code)
+        # Send mail
+        send_mail(recipient, subject, body)
         return jsonify({'code': 200, 'desc': "Email was sent", 'email_code': code}), 200
     except KeyError:
         return jsonify({'code': 400, 'desc': "Bad request"}), 400
@@ -270,8 +274,9 @@ def reg_user():
             user_exist = Users.query.filter(Users.email == json_data['email']).first()
             # If there's such user in DB
             if not user_exist:
+                passw = sha256(str(json_data['password']).encode('utf-8')).hexdigest()
                 # Create user with recieved data
-                user = Users(email=json_data['email'], password=json_data['password'],
+                user = Users(email=json_data['email'], password=passw,
                              name=json_data['name'], phone=json_data['phone'],
                              active=False)
                 # Add user to DB
@@ -301,8 +306,9 @@ def password_recovery():
             user_recovery = Users.query.filter(Users.email == json_data['email']).first()
             # If code from email is correct and suxh user exists
             if user_recovery:
+                passw = sha256(str(json_data['password']).encode('utf-8')).hexdigest()
                 # Update password of a user with new password
-                user_recovery.password = json_data['password']
+                user_recovery.password = passw
                 # Change record in DB
                 db.session.add(user_recovery)
                 db.session.commit()
@@ -816,18 +822,27 @@ def reg_booking():
     return render_template('reg_booking.html', ans=ans)
 
 
-# Function to send email
-def send_mail(mail_to, subject, text):
-    try:
-        # Try to send message to user
-        msg = Message()
-        msg.subject = subject
-        msg.recipients = [mail_to]
-        msg.html = text
-        mail.send(msg)
-        return True
-    # If in email was detected not-ascii symbols
-    except UnicodeEncodeError:
-        return False
-    except Exception:
-        return False
+@app.route("/reg_new_admin", methods=['GET', 'POST'])
+@login_required
+def reg_new_admin():
+
+    if current_user.has_role("admin"):
+        if request.method == 'POST':
+            name = request.form['inputName']
+            phone = request.form['InputPhone']
+            email = request.form['InputEmail']
+            password = request.form['InputPassword']
+            password_agane = request.form['InputPasswordAgane']
+
+            if password == password_agane:
+                is_user = Users.query.filter(Users.email == str(email)).first()
+                if not is_user:
+                    new_user = Users(email=email, password=password, name=name, phone=phone, active=True)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    return render_template('reg_new_admin.html', ans=1, access=True)
+                return render_template('reg_new_admin.html', ans=2, access=True)
+            return render_template('reg_new_admin.html', ans=3, access=True)
+        return render_template('reg_new_admin.html', access=True)
+    else:
+        return render_template('reg_new_admin.html', access=False)
