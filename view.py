@@ -213,8 +213,7 @@ def find_user(user_email):
 def authorize():
     try:
         # Get data and convert them to JSON
-        data = request.data
-        json_data = json.loads(data)
+        json_data = json.loads(request.data)
         # Select record from DB, where email==email and password==password
         user = Users.query.filter(and_(Users.email == json_data['email'],
                                        Users.password == json_data['password'])).first()
@@ -236,8 +235,7 @@ def authorize():
 def verify_email():
     try:
         # Get data and convert them to JSON (ONLY email)
-        data = request.data
-        json_data = json.loads(data)
+        json_data = json.loads(request.data)
         # Generate unique 5-signs numeric code
         code = str(randint(10000, 99999))
         # Create service headers and message body
@@ -265,8 +263,7 @@ def test_auth():
 def reg_user():
     try:
         # Get data and convert into JSON (email, password, code
-        data = request.data
-        json_data = json.loads(data)
+        json_data = json.loads(request.data)
         user_accessed = UserRegAccessCode().find_user_reg_access_code(email=json_data['email'], code=json_data['code'])
         if user_accessed:
             # Select user with such email
@@ -298,8 +295,7 @@ def reg_user():
 def password_recovery():
     try:
         # Get data and convert into JSON (email, password, code
-        data = request.data
-        json_data = json.loads(data)
+        json_data = json.loads(request.data)
         if UserRegAccessCode().find_user_reg_access_code(email=json_data['email'], code=json_data['code']):
             # If user was registered
             user_recovery = Users.query.filter(Users.email == json_data['email']).first()
@@ -380,8 +376,7 @@ def empty_places():
 @jwt_required
 def reserve_place():
     try:
-        data = request.data
-        json_data = json.loads(data)
+        json_data = json.loads(request.data)
         if not json_data['email'] == "":
             str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
             str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
@@ -418,13 +413,12 @@ def reserve_place():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-@app.route(def_route+'/show_user_booking', methods=['POST'])
+@app.route(def_route+'/show_user_booking', methods=['GET'])
 @jwt_required
 def show_user_booking():
     try:
-        data = request.data
-        json_data = json.loads(data)
-        user = Users.query.filter(Users.email == str(json_data['email'])).first()
+        user_email = get_jwt_identity()
+        user = Users.query.filter(Users.email == str(user_email)).first()
         if user:
             bookings = Booking.query.filter(Booking.user_id == user.id).order_by(Booking.date_time_from).all()
             booking_list = []
@@ -440,28 +434,31 @@ def show_user_booking():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-@app.route(def_route+'/delete_user_booking', methods=['POST'])
+@app.route(def_route+'/delete_user_booking/<booking_id>', methods=['DELETE'])
 @jwt_required
-def delete_user_booking():
+def delete_user_booking(booking_id):
     try:
-        data = request.data
-        json_data = json.loads(data)
-        user = Users.query.filter(Users.email == str(json_data['email'])).first()
+        user_email = get_jwt_identity()
+        user = Users.query.filter(Users.email == str(user_email)).first()
         if user:
             bbk = Booking.query.filter(and_(Booking.user_id == int(user.id),
-                                                 Booking.booking_id == int(json_data['booking_id'])
-                                                 )).all()
+                                            Booking.booking_id == int(booking_id),
+                                            Booking.accepted
+                                            )).all()
             bookings = Booking.query.filter(and_(Booking.user_id == int(user.id),
-                                                 Booking.booking_id == int(json_data['booking_id'])
+                                                 Booking.booking_id == int(booking_id)
                                                  )).delete()
             for booking in bbk:
-                deleted_booking = DeletedBooking(date_time_from=booking.date_time_from, date_time_to=booking.date_time_to,
-                                                 user_id=user.id, table_id=booking.table_id)
+                deleted_booking = DeletedBooking(date_time_from=booking.date_time_from,
+                                                 date_time_to=booking.date_time_to,
+                                                 user_id=user.id,
+                                                 table_id=booking.table_id)
                 db.session.add(deleted_booking)
             db.session.commit()
             if not bookings == 0:
                 return jsonify({'code': 200, 'desc': "OK"}), 200
-        return jsonify({'code': 404, 'desc': "User or booking not found"}), 404
+            return jsonify({'code': 404, 'desc': "Booking not found"}), 404
+        return jsonify({'code': 404, 'desc': "User not found"}), 404
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except ValueError:
@@ -470,13 +467,12 @@ def delete_user_booking():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-@app.route(def_route+'/view_user_credentials', methods=['POST'])
+@app.route(def_route+'/view_user_credentials', methods=['GET'])
 @jwt_required
 def view_user_credentials():
     try:
-        data = request.data
-        json_data = json.loads(data)
-        user = Users.query.filter(Users.email == str(json_data['email'])).first()
+        user_email = get_jwt_identity()
+        user = Users.query.filter(Users.email == str(user_email)).first()
         if user:
             return jsonify({'data': user.prepare_json()}), 200
         return jsonify({'code': 404, 'desc': "User not found"}), 404
@@ -488,14 +484,14 @@ def view_user_credentials():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-@app.route(def_route+'/change_user_credentials', methods=['POST'])
+@app.route(def_route+'/change_user_credentials', methods=['PATCH'])
 @jwt_required
 def change_user_credentials():
     try:
-        data = request.data
-        json_data = json.loads(data)
+        user_email = get_jwt_identity()
+        json_data = json.loads(request.data)
         if not json_data['new_email'] or json_data['new_email'] == "":
-            user = Users.query.filter(Users.email == str(json_data['email'])).first()
+            user = Users.query.filter(Users.email == str(user_email)).first()
             if user:
                 user.name = str(json_data['name'])
                 user.phone = str(json_data['phone'])
@@ -513,7 +509,7 @@ def change_user_credentials():
                                                                           code=json_data['code'])
             if user_accessed:
                 new_user_exist = Users.query.filter(Users.email == json_data['new_email']).first()
-                user = Users.query.filter(Users.email == str(json_data['email'])).first()
+                user = Users.query.filter(Users.email == str(user_email)).first()
                 # If there's such user in DB
                 if not new_user_exist and user:
                     user.email = str(json_data['new_email'])
