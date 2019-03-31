@@ -353,28 +353,25 @@ class UserRegAccessCode(db.Model):
     email = db.Column(db.String(250))
     code = db.Column(db.BigInteger)
 
-    def find_user_reg_access_code(self, email, code):
-        #try:
-
+    @classmethod
+    def find_user_reg_access_code(cls, email, code):
+        try:
             user_accessed = UserRegAccessCode.query.filter(and_(UserRegAccessCode.email == str(email),
-                                                                UserRegAccessCode.code == int(code))).order_by(UserRegAccessCode.user_access_id.desc()).first()
+                                                                UserRegAccessCode.code == int(code))).\
+                                                    order_by(UserRegAccessCode.user_access_id.desc()).first()
             if user_accessed:
                 return True
             return False
-        #except Exception:
-            #return False
-
-    def insert_user_reg_access_code(self, email, code):
-        try:
-            user_access = UserRegAccessCode(datetime=datetime.utcnow() + timedelta(hours=3) + timedelta(minutes=10), email=str(email), code=code)
-            db.session.add(user_access)
-            db.session.commit()
         except Exception:
             return False
 
-    def delete_user_reg_access_code(self, email):
+    @classmethod
+    def insert_user_reg_access_code(cls, email, code):
         try:
-            #u = self.user_reg_access_code.pop(email, None)
-            print("oohps")
+            user_access = UserRegAccessCode(datetime=datetime.utcnow() + timedelta(hours=3) + timedelta(minutes=10),
+                                            email=str(email),
+                                            code=code)
+            db.session.add(user_access)
+            db.session.commit()
         except Exception:
             return False

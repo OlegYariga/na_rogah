@@ -534,7 +534,8 @@ def change_user_credentials():
                         # Create a response with access token
                         return jsonify({'code': 200, 'desc': "Authorized",
                                         'email': str(user.email), 'access_token': access_token}), 200
-                return jsonify({'code': 404, 'desc': "Current user not found or user with new_email already exists"}), 404
+                return jsonify({'code': 404,
+                                'desc': "Current user not found or user with new_email already exists"}), 404
             return jsonify({'code': 404, 'desc': "New email verify code is not valid"}), 404
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
@@ -544,15 +545,13 @@ def change_user_credentials():
         return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
-
-#######################################################################################
 # ADMIN VIEW
 # View function for custom admin
 @app.route(def_route+'/', methods=['GET', 'POST'])
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
-    #try:
+    try:
         # If something was POSTed
         if request.method == 'POST':
             # If button "Accept" was pressed
@@ -593,7 +592,12 @@ def index():
                                 # Insert data to message body in HTML
                                 body = """
                                 <h1><b>Здравствуйте, """+name+"""!</b></h1>
-                                <p>Вы успешно забронировали стол <b>№ """+num+"""</b> на <b>"""+b_date+"""</b> с <b>"""+b_time_from+"""</b> до <b>"""+b_time_to+"""</b>. Номер Вашего заказа - <b>"""+ident+"""</b></p>
+                                <p>Вы успешно забронировали стол <b>№ """ +\
+                                       num+"""</b> на <b>""" +\
+                                       b_date+"""</b> с <b>""" +\
+                                       b_time_from+"""</b> до <b>""" +\
+                                       b_time_to+"""</b>. Номер Вашего заказа - <b>"""\
+                                       + ident + """</b></p>
                                 <p>Мы с радостью ждем Вас в гости!</p>
                                 """
                                 # Send email
@@ -608,7 +612,7 @@ def index():
                     db.session.commit()
         # MAIN PART
         # Select not-accepted booking records from DB
-        booking = Booking.query.filter(not_(Booking.accepted == True)).all()
+        booking = Booking.query.filter(not_(Booking.accepted is True)).all()
 
         flights_keys = {}
         flights = []
@@ -636,213 +640,230 @@ def index():
             flights_keys = {}
         # Create view page with data
         return render_template('index.html', flights=flights)
-    #except KeyError:
-        #return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
-    #except Exception:
-        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route("/view_booking", methods=['GET', 'POST'])
 @login_required
 def view_booking():
-    # try:
-    date_booking = None
-    date_booking_date = None
-    # If something was POSTed
-    if request.method == 'POST':
-        # If button "Accept" was pressed
-        if request.form['index'] == "0":
-            # Select id of record, where button was pressed
-            date_booking = request.form['date_booking']
-        # If was pressed 'delete' button
-        if request.form['index'] == "1":
-            date_booking = request.form['del_date']
-            # Select id of record, where button was pressed
-            booking_delete = request.form['booking_delete']
-            if booking_delete:
-                # Delete such record from DB. If there's no records - do nothing
-                Booking.query.filter(Booking.booking_id == booking_delete).delete()
-                db.session.commit()
-        if request.form['index'] == "10":
-            date_booking = request.form['del_date']
-            # Select id of record, where button was pressed
-            booking_delete = request.form['deleted_booking_confirm']
-            if booking_delete:
-                # Delete such record from DB. If there's no records - do nothing
-                DeletedBooking.query.filter(DeletedBooking.booking_id == booking_delete).delete()
-                db.session.commit()
-    if request.method == 'GET':
-        date_time_now_utc = datetime.utcnow()
-        date_time_moscow_now = date_time_now_utc + timedelta(hours=3)
-        date_time_moscow_now = datetime.strftime(date_time_moscow_now, "%Y-%m-%d")
-        date_booking = str(date_time_moscow_now)
-    # MAIN PART
-    booking = Booking.query.filter((Booking.accepted == True)).all()
-    deleted_booking = DeletedBooking.query.all()
-    del_book_keys = {}
-    del_book_list = []
+    try:
+        date_booking = None
+        date_booking_date = None
+        # If something was POSTed
+        if request.method == 'POST':
+            # If button "Accept" was pressed
+            if request.form['index'] == "0":
+                # Select id of record, where button was pressed
+                date_booking = request.form['date_booking']
+            # If was pressed 'delete' button
+            if request.form['index'] == "1":
+                date_booking = request.form['del_date']
+                # Select id of record, where button was pressed
+                booking_delete = request.form['booking_delete']
+                if booking_delete:
+                    # Delete such record from DB. If there's no records - do nothing
+                    Booking.query.filter(Booking.booking_id == booking_delete).delete()
+                    db.session.commit()
+            if request.form['index'] == "10":
+                date_booking = request.form['del_date']
+                # Select id of record, where button was pressed
+                booking_delete = request.form['deleted_booking_confirm']
+                if booking_delete:
+                    # Delete such record from DB. If there's no records - do nothing
+                    DeletedBooking.query.filter(DeletedBooking.booking_id == booking_delete).delete()
+                    db.session.commit()
+        if request.method == 'GET':
+            date_time_now_utc = datetime.utcnow()
+            date_time_moscow_now = date_time_now_utc + timedelta(hours=3)
+            date_time_moscow_now = datetime.strftime(date_time_moscow_now, "%Y-%m-%d")
+            date_booking = str(date_time_moscow_now)
+        # MAIN PART
+        booking = Booking.query.filter((Booking.accepted == True)).all()
+        deleted_booking = DeletedBooking.query.all()
+        del_book_keys = {}
+        del_book_list = []
 
-    for del_book in deleted_booking:
-        #print(del_book)
-        date_from = datetime.strftime(del_book.date_time_from, "%d.%m.%Y")
-        time_from = datetime.strftime(del_book.date_time_from, "%H:%M")
-        date_to = datetime.strftime(del_book.date_time_to, "%d.%m.%Y")
-        time_to = datetime.strftime(del_book.date_time_to, "%H:%M")
-        if date_booking:
-            date_booking_str = datetime.strptime(date_booking, "%Y-%m-%d")
-            date_booking_date = datetime.strftime(date_booking_str, "%d.%m.%Y")
-        if date_booking_date:
-            if date_from == date_booking_date:
-                user = Users.query.filter(Users.id == del_book.user_id).first()
-                del_book_keys['user_name'] = user.name
-                del_book_keys['user_phone'] = user.phone
+        for del_book in deleted_booking:
+            #print(del_book)
+            date_from = datetime.strftime(del_book.date_time_from, "%d.%m.%Y")
+            time_from = datetime.strftime(del_book.date_time_from, "%H:%M")
+            date_to = datetime.strftime(del_book.date_time_to, "%d.%m.%Y")
+            time_to = datetime.strftime(del_book.date_time_to, "%H:%M")
+            if date_booking:
+                date_booking_str = datetime.strptime(date_booking, "%Y-%m-%d")
+                date_booking_date = datetime.strftime(date_booking_str, "%d.%m.%Y")
+            if date_booking_date:
+                if date_from == date_booking_date:
+                    user = Users.query.filter(Users.id == del_book.user_id).first()
+                    del_book_keys['user_name'] = user.name
+                    del_book_keys['user_phone'] = user.phone
 
-                del_book_keys['booking_id'] = del_book.booking_id
-                del_book_keys['date_from'] = date_from
-                del_book_keys['time_from'] = time_from
-                del_book_keys['time_to'] = time_to
-                del_book_keys['table_id'] = del_book.table_id
-                del_book_list.append(del_book_keys)
+                    del_book_keys['booking_id'] = del_book.booking_id
+                    del_book_keys['date_from'] = date_from
+                    del_book_keys['time_from'] = time_from
+                    del_book_keys['time_to'] = time_to
+                    del_book_keys['table_id'] = del_book.table_id
+                    del_book_list.append(del_book_keys)
 
-    flights_keys = {}
-    flights = []
-    for order in booking:
-        date_from = datetime.strftime(order.date_time_from, "%d.%m.%Y")
-        time_from = datetime.strftime(order.date_time_from, "%H:%M")
-        date_to = datetime.strftime(order.date_time_to, "%d.%m.%Y")
-        time_to = datetime.strftime(order.date_time_to, "%H:%M")
-        if date_booking:
-            date_booking_str = datetime.strptime(date_booking, "%Y-%m-%d")
-            date_booking_date = datetime.strftime(date_booking_str, "%d.%m.%Y")
-        if date_booking_date:
-            if date_from == date_booking_date:
-                # Select users in every booking item (order)
-                user = Users.query.filter(Users.id == order.user_id).first()
-                # Fill th dictionary with booking and user data
-                flights_keys['booking_id'] = order.booking_id
-                flights_keys['date_from'] = date_from
-                flights_keys['time_from'] = time_from
-                flights_keys['time_to'] = time_to
-                if user:
-                    flights_keys['user_name'] = user.name
-                    flights_keys['phone'] = user.phone
-                else:
-                    flights_keys['user_name'] = "Нет данных"
-                    flights_keys['phone'] = "Нет данных"
-                flights_keys['table_id'] = order.table_id
-                # Append list with the dictionary and clear dictionary
-                flights.append(flights_keys)
-                flights_keys = {}
-    date = date_booking
-    return render_template('view_booking.html', flights=flights, date=date, del_book_list=del_book_list)
+        flights_keys = {}
+        flights = []
+        for order in booking:
+            date_from = datetime.strftime(order.date_time_from, "%d.%m.%Y")
+            time_from = datetime.strftime(order.date_time_from, "%H:%M")
+            date_to = datetime.strftime(order.date_time_to, "%d.%m.%Y")
+            time_to = datetime.strftime(order.date_time_to, "%H:%M")
+            if date_booking:
+                date_booking_str = datetime.strptime(date_booking, "%Y-%m-%d")
+                date_booking_date = datetime.strftime(date_booking_str, "%d.%m.%Y")
+            if date_booking_date:
+                if date_from == date_booking_date:
+                    # Select users in every booking item (order)
+                    user = Users.query.filter(Users.id == order.user_id).first()
+                    # Fill th dictionary with booking and user data
+                    flights_keys['booking_id'] = order.booking_id
+                    flights_keys['date_from'] = date_from
+                    flights_keys['time_from'] = time_from
+                    flights_keys['time_to'] = time_to
+                    if user:
+                        flights_keys['user_name'] = user.name
+                        flights_keys['phone'] = user.phone
+                    else:
+                        flights_keys['user_name'] = "Нет данных"
+                        flights_keys['phone'] = "Нет данных"
+                    flights_keys['table_id'] = order.table_id
+                    # Append list with the dictionary and clear dictionary
+                    flights.append(flights_keys)
+                    flights_keys = {}
+        date = date_booking
+        return render_template('view_booking.html', flights=flights, date=date, del_book_list=del_book_list)
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route("/reg_booking", methods=['GET', 'POST'])
 @login_required
 def reg_booking():
-    # variable to store errors, if they are and 0, if there're no errors
-    ans = 3
-    # If something was POSTed
-    if request.method == 'POST':
-        name = request.form['inputName']
-        phone = request.form['InputPhone']
-        date_from = request.form['InputDateFrom']
-        time_hours_from = request.form['InputTimeHoursFrom']
-        time_minutes_from = request.form['InputTimeMinutesFrom']
-        time_hours_to = request.form['InputTimeHoursTo']
-        time_minutes_to = request.form['InputTimeMinutesTo']
-        date_to = request.form['InputDateTo']
-        table = request.form['InputTableNum']
+    try:
+        # variable to store errors, if they are and 0, if there're no errors
+        ans = 3
+        # If something was POSTed
+        if request.method == 'POST':
+            name = request.form['inputName']
+            phone = request.form['InputPhone']
+            date_from = request.form['InputDateFrom']
+            time_hours_from = request.form['InputTimeHoursFrom']
+            time_minutes_from = request.form['InputTimeMinutesFrom']
+            time_hours_to = request.form['InputTimeHoursTo']
+            time_minutes_to = request.form['InputTimeMinutesTo']
+            date_to = request.form['InputDateTo']
+            table = request.form['InputTableNum']
 
-        date_time_from = str(date_from) + " " + str(time_hours_from) + ":" + str(time_minutes_from)
-        date_time_to = str(date_to) + " " + str(time_hours_to) + ":" + str(time_minutes_to)
-        if (datetime.strptime(date_time_to, "%Y-%m-%d %H:%M") - datetime.strptime(date_time_from, "%Y-%m-%d %H:%M")) <= timedelta(hours=4):
-            if datetime.strptime(date_time_from, "%Y-%m-%d %H:%M") < datetime.strptime(date_time_to, "%Y-%m-%d %H:%M"):
+            date_time_from = str(date_from) + " " + str(time_hours_from) + ":" + str(time_minutes_from)
+            date_time_to = str(date_to) + " " + str(time_hours_to) + ":" + str(time_minutes_to)
+            if (datetime.strptime(date_time_to,
+                                  "%Y-%m-%d %H:%M") - datetime.strptime(date_time_from,
+                                                                        "%Y-%m-%d %H:%M")) <= timedelta(hours=4):
+                if datetime.strptime(date_time_from, "%Y-%m-%d %H:%M") < datetime.strptime(date_time_to, "%Y-%m-%d %H:%M"):
 
-                booking_week_day = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").weekday()
-                timetable = None
-                if booking_week_day == 0:
-                    timetable = Timetable.query.filter(Timetable.week_day == "пн").first()
-                elif booking_week_day == 1:
-                    timetable = Timetable.query.filter(Timetable.week_day == "вт").first()
-                elif booking_week_day == 2:
-                    timetable = Timetable.query.filter(Timetable.week_day == "ср").first()
-                elif booking_week_day == 3:
-                    timetable = Timetable.query.filter(Timetable.week_day == "чт").first()
-                elif booking_week_day == 4:
-                    timetable = Timetable.query.filter(Timetable.week_day == "пт").first()
-                elif booking_week_day == 5:
-                    timetable = Timetable.query.filter(Timetable.week_day == "сб").first()
-                elif booking_week_day == 6:
-                    timetable = Timetable.query.filter(Timetable.week_day == "вс").first()
-                if timetable:
-                    str_date_time_from = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").time()
-                    str_date_time_to = datetime.strptime(date_time_to, "%Y-%m-%d %H:%M").time()
-                    print("Время начала из формы: ", str_date_time_from)
-                    print("Время окончания из формы: ", str_date_time_to)
-                    print("Время начала из расписания: ", timetable.time_from)
-                    print("Время окончания из расписания: ", timetable.time_to)
-                    if str_date_time_from >= timetable.time_from:
-                        forbidden = Booking.query.filter(and_(table == Booking.table_id,
-                                                              and_((
-                                                                  or_(Booking.date_time_from >= date_time_from,
-                                                                      Booking.date_time_to >= date_time_from)),
-                                                                  or_(Booking.date_time_from <= date_time_to,
-                                                                      Booking.date_time_to <= date_time_to))
-                                                              )).all()
-                        if not forbidden:
+                    booking_week_day = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").weekday()
+                    timetable = None
+                    if booking_week_day == 0:
+                        timetable = Timetable.query.filter(Timetable.week_day == "пн").first()
+                    elif booking_week_day == 1:
+                        timetable = Timetable.query.filter(Timetable.week_day == "вт").first()
+                    elif booking_week_day == 2:
+                        timetable = Timetable.query.filter(Timetable.week_day == "ср").first()
+                    elif booking_week_day == 3:
+                        timetable = Timetable.query.filter(Timetable.week_day == "чт").first()
+                    elif booking_week_day == 4:
+                        timetable = Timetable.query.filter(Timetable.week_day == "пт").first()
+                    elif booking_week_day == 5:
+                        timetable = Timetable.query.filter(Timetable.week_day == "сб").first()
+                    elif booking_week_day == 6:
+                        timetable = Timetable.query.filter(Timetable.week_day == "вс").first()
+                    if timetable:
+                        str_date_time_from = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").time()
+                        str_date_time_to = datetime.strptime(date_time_to, "%Y-%m-%d %H:%M").time()
+                        print("Время начала из формы: ", str_date_time_from)
+                        print("Время окончания из формы: ", str_date_time_to)
+                        print("Время начала из расписания: ", timetable.time_from)
+                        print("Время окончания из расписания: ", timetable.time_to)
+                        if str_date_time_from >= timetable.time_from:
+                            forbidden = Booking.query.filter(and_(table == Booking.table_id,
+                                                                  and_((
+                                                                      or_(Booking.date_time_from >= date_time_from,
+                                                                          Booking.date_time_to >= date_time_from)),
+                                                                      or_(Booking.date_time_from <= date_time_to,
+                                                                          Booking.date_time_to <= date_time_to))
+                                                                  )).all()
+                            if not forbidden:
 
-                            email = str(uuid.uuid4())+"@mail.ru"
-                            password = email
-                            user = Users(email=email, password=password, name=name, phone=phone)
-                            db.session.add(user)
-                            db.session.commit()
-                            user = Users.query.filter(Users.email == email).first()
-                            is_table = Tables.query.filter(Tables.table_id == table).first()
-
-                            if user and is_table:
-                                booking = Booking(date_time_from=date_time_from, date_time_to=date_time_to, user_id=user.id,
-                                                  table_id=table, accepted=True)
-                                db.session.add(booking)
+                                email = str(uuid.uuid4())+"@mail.ru"
+                                password = email
+                                user = Users(email=email, password=password, name=name, phone=phone)
+                                db.session.add(user)
                                 db.session.commit()
-                                ans = 0
-                            else:
-                                ans = 1
-                        else:
-                            ans = 4
-                    else:
-                       ans = 5
-                else:
-                    ans = 5
-            else:
-                ans = 2
-        else:
-            ans = 6
+                                user = Users.query.filter(Users.email == email).first()
+                                is_table = Tables.query.filter(Tables.table_id == table).first()
 
-    return render_template('reg_booking.html', ans=ans)
+                                if user and is_table:
+                                    booking = Booking(date_time_from=date_time_from,
+                                                      date_time_to=date_time_to,
+                                                      user_id=user.id,
+                                                      table_id=table, accepted=True)
+                                    db.session.add(booking)
+                                    db.session.commit()
+                                    ans = 0
+                                else:
+                                    ans = 1
+                            else:
+                                ans = 4
+                        else:
+                           ans = 5
+                    else:
+                        ans = 5
+                else:
+                    ans = 2
+            else:
+                ans = 6
+
+        return render_template('reg_booking.html', ans=ans)
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route("/reg_new_admin", methods=['GET', 'POST'])
 @login_required
 def reg_new_admin():
+    try:
+        if current_user.has_role("admin"):
+            if request.method == 'POST':
+                name = request.form['inputName']
+                phone = request.form['InputPhone']
+                email = request.form['InputEmail']
+                password = request.form['InputPassword']
+                password_agane = request.form['InputPasswordAgane']
 
-    if current_user.has_role("admin"):
-        if request.method == 'POST':
-            name = request.form['inputName']
-            phone = request.form['InputPhone']
-            email = request.form['InputEmail']
-            password = request.form['InputPassword']
-            password_agane = request.form['InputPasswordAgane']
-
-            if password == password_agane:
-                is_user = Users.query.filter(Users.email == str(email)).first()
-                if not is_user:
-                    new_user = Users(email=email, password=password, name=name, phone=phone, active=True)
-                    db.session.add(new_user)
-                    db.session.commit()
-                    return render_template('reg_new_admin.html', ans=1, access=True)
-                return render_template('reg_new_admin.html', ans=2, access=True)
-            return render_template('reg_new_admin.html', ans=3, access=True)
-        return render_template('reg_new_admin.html', access=True)
-    else:
-        return render_template('reg_new_admin.html', access=False)
+                if password == password_agane:
+                    is_user = Users.query.filter(Users.email == str(email)).first()
+                    if not is_user:
+                        new_user = Users(email=email, password=password, name=name, phone=phone, active=True)
+                        db.session.add(new_user)
+                        db.session.commit()
+                        return render_template('reg_new_admin.html', ans=1, access=True)
+                    return render_template('reg_new_admin.html', ans=2, access=True)
+                return render_template('reg_new_admin.html', ans=3, access=True)
+            return render_template('reg_new_admin.html', access=True)
+        else:
+            return render_template('reg_new_admin.html', access=False)
+    except KeyError:
+        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    except Exception:
+        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
