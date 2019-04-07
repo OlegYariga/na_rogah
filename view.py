@@ -28,7 +28,7 @@ from flask_jwt_extended import (create_access_token,
 
 # Load APPLICATION_ROOT from config
 def_route = '/api/v1'
-expires_jwt = timedelta(minutes=1000)
+expires_jwt = timedelta(minutes=10000)
 
 
 # Make session permanent with lifetime=1 before request
@@ -382,35 +382,36 @@ def empty_places():
 @jwt_required
 def reserve_place():
     try:
-        json_data = json.loads(request.data)
-        if not json_data['email'] == "":
-            str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
-            str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
-            date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
-            date_time_to = datetime.strptime(str_date_time_to, "%Y-%m-%d %H:%M:%S")
-            if date_time_from <= date_time_to:
-                forbidden = Booking.query.filter(and_(json_data['table_id'] == Booking.table_id,
-                                                    and_((
-                                                        or_(Booking.date_time_from >= date_time_from,
-                                                            Booking.date_time_to >= date_time_from)),
-                                                        or_(Booking.date_time_from <= date_time_to,
-                                                            Booking.date_time_to <= date_time_to))
-                                                    )).all()
-                user = Users.query.filter(Users.email == json_data['email']).first()
-                table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
-                if not forbidden:
-                    if table_id and user:
-                        booking = Booking(date_time_from=date_time_from,
-                                          date_time_to=date_time_to,
-                                          user_id=user.id,
-                                          table_id=json_data['table_id'])
-                        db.session.add(booking)
-                        db.session.commit()
-                        return jsonify({'code': 200, 'desc': "OK"}), 200
-                    return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
-                return jsonify({'code': 451, 'desc': "This time is booked"}), 451
-            return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
-        return jsonify({'code': 420, 'desc': "Email is empty"}), 420
+        with lock:
+            json_data = json.loads(request.data)
+            if not json_data['email'] == "":
+                str_date_time_from = json_data['date'] + ' ' + json_data['time_from']
+                str_date_time_to = json_data['date_to'] + ' ' + json_data['time_to']
+                date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
+                date_time_to = datetime.strptime(str_date_time_to, "%Y-%m-%d %H:%M:%S")
+                if date_time_from <= date_time_to:
+                    forbidden = Booking.query.filter(and_(json_data['table_id'] == Booking.table_id,
+                                                        and_((
+                                                            or_(Booking.date_time_from >= date_time_from,
+                                                                Booking.date_time_to >= date_time_from)),
+                                                            or_(Booking.date_time_from <= date_time_to,
+                                                                Booking.date_time_to <= date_time_to))
+                                                        )).all()
+                    user = Users.query.filter(Users.email == json_data['email']).first()
+                    table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
+                    if not forbidden:
+                        if table_id and user:
+                            booking = Booking(date_time_from=date_time_from,
+                                              date_time_to=date_time_to,
+                                              user_id=user.id,
+                                              table_id=json_data['table_id'])
+                            db.session.add(booking)
+                            db.session.commit()
+                            return jsonify({'code': 200, 'desc': "OK"}), 200
+                        return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
+                    return jsonify({'code': 451, 'desc': "This time is booked"}), 451
+                return jsonify({'code': 400, 'desc': "Bag request - time_from > time_to"}), 400
+            return jsonify({'code': 420, 'desc': "Email is empty"}), 420
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except ValueError:
@@ -498,7 +499,28 @@ def change_user_credentials():
         json_data = json.loads(request.data)
         if not json_data['new_email'] or json_data['new_email'] == "":
             user = Users.query.filter(Users.email == str(user_email)).first()
-            if user:
+            if not user:
+                return jsonify({'code': 404, 'desc': "User not found"}), 404
+            user.name = str(json_data['name'])
+            user.phone = str(json_data['phone'])
+            bd = json_data['birthday']
+            if not bd or bd == "":
+                date_birth = None
+            else:
+                date_birth = datetime.strptime(bd, "%Y-%m-%d")
+            user.birthday = date_birth
+            db.session.commit()
+            return jsonify({'code': 200, 'desc': "OK"}), 200
+        else:
+            user_accessed = UserRegAccessCode().find_user_reg_access_code(email=json_data['new_email'],
+                                                                          code=json_data['code'])
+            if not user_accessed:
+                return jsonify({'code': 404, 'desc': "New email verify code is not valid"}), 404
+            new_user_exist = Users.query.filter(Users.email == json_data['new_email']).first()
+            user = Users.query.filter(Users.email == str(user_email)).first()
+            # If there's such user in DB
+            if not new_user_exist and user:
+                user.email = str(json_data['new_email'])
                 user.name = str(json_data['name'])
                 user.phone = str(json_data['phone'])
                 bd = json_data['birthday']
@@ -508,35 +530,14 @@ def change_user_credentials():
                     date_birth = datetime.strptime(bd, "%Y-%m-%d")
                 user.birthday = date_birth
                 db.session.commit()
-                return jsonify({'code': 200, 'desc': "OK"}), 200
-            return jsonify({'code': 404, 'desc': "User not found"}), 404
-        else:
-            user_accessed = UserRegAccessCode().find_user_reg_access_code(email=json_data['new_email'],
-                                                                          code=json_data['code'])
-            if user_accessed:
-                new_user_exist = Users.query.filter(Users.email == json_data['new_email']).first()
-                user = Users.query.filter(Users.email == str(user_email)).first()
-                # If there's such user in DB
-                if not new_user_exist and user:
-                    user.email = str(json_data['new_email'])
-                    user.name = str(json_data['name'])
-                    user.phone = str(json_data['phone'])
-                    bd = json_data['birthday']
-                    if not bd or bd == "":
-                        date_birth = None
-                    else:
-                        date_birth = datetime.strptime(bd, "%Y-%m-%d")
-                    user.birthday = date_birth
-                    db.session.commit()
-                    if user:
-                        # Generate token with JWT
-                        access_token = "Bearer " + create_access_token(identity=user.email, expires_delta=expires_jwt)
-                        # Create a response with access token
-                        return jsonify({'code': 200, 'desc': "Authorized",
-                                        'email': str(user.email), 'access_token': access_token}), 200
-                return jsonify({'code': 404,
-                                'desc': "Current user not found or user with new_email already exists"}), 404
-            return jsonify({'code': 404, 'desc': "New email verify code is not valid"}), 404
+                if user:
+                    # Generate token with JWT
+                    access_token = "Bearer " + create_access_token(identity=user.email, expires_delta=expires_jwt)
+                    # Create a response with access token
+                    return jsonify({'code': 200, 'desc': "Authorized",
+                                    'email': str(user.email), 'access_token': access_token}), 200
+            return jsonify({'code': 404,
+                            'desc': "Current user not found or user with new_email already exists"}), 404
     except KeyError:
         return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
     except ValueError:

@@ -17,6 +17,7 @@ from flask_mail import Mail
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_jwt_extended import JWTManager
+from threading import RLock
 
 # Create class instance Flask with name app
 # Load configurations from config file
@@ -79,3 +80,5 @@ jwt = JWTManager(app)
 #initialized store for user access codes
 #user_access_code = UserRegAccessCode()
 user_reg_access_code = []
+
+lock = RLock()
