@@ -409,6 +409,16 @@ def reserve_place():
                                               table_id=json_data['table_id'])
                             db.session.add(booking)
                             db.session.commit()
+                            forbidden = Booking.query.filter(and_(json_data['table_id'] == Booking.table_id,
+                                                                  and_((
+                                                                      or_(Booking.date_time_from >= date_time_from,
+                                                                          Booking.date_time_to >= date_time_from)),
+                                                                      or_(Booking.date_time_from <= date_time_to,
+                                                                          Booking.date_time_to <= date_time_to))
+                                                                  )).count()
+                            if forbidden > 1:
+                                bookeed = Booking.query.filter(Booking.table_id == booking.table_id).delete()
+                                return jsonify({'code': 451, 'desc': "This time is booked"}), 451
                             return jsonify({'code': 200, 'desc': "OK"}), 200
                         return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
                     return jsonify({'code': 451, 'desc': "This time is booked"}), 451

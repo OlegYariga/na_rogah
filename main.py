@@ -5,4 +5,4 @@ import view
 
 # Define application entery point
 if __name__ == '__main__':
-    app.run(threaded=False)
+    app.run()
