@@ -417,7 +417,7 @@ def reserve_place():
                                                                           Booking.date_time_to <= date_time_to))
                                                                   )).count()
                             if forbidden > 1:
-                                bookeed = Booking.query.filter(Booking.table_id == booking.table_id).delete()
+                                bookeed = Booking.query.filter(Booking.booking_id == booking.booking_id).delete()
                                 return jsonify({'code': 451, 'desc': "This time is booked"}), 451
                             return jsonify({'code': 200, 'desc': "OK"}), 200
                         return jsonify({'code': 404, 'desc': "Such table was not found"}), 404
