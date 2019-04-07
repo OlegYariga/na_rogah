@@ -5,6 +5,7 @@ from hashlib import sha256
 from random import randint
 from datetime import timedelta, time, date
 
+from sqlalchemy import create_engine
 from flask import request, jsonify, session, Response, make_response, send_from_directory, render_template
 from flask_security import login_required
 from flask_mail import Message
@@ -390,13 +391,14 @@ def reserve_place():
                 date_time_from = datetime.strptime(str_date_time_from, "%Y-%m-%d %H:%M:%S")
                 date_time_to = datetime.strptime(str_date_time_to, "%Y-%m-%d %H:%M:%S")
                 if date_time_from <= date_time_to:
-                    forbidden = Booking.query.filter(and_(json_data['table_id'] == Booking.table_id,
+                    forbidden = Booking.query.with_for_update(of=Booking).\
+                        filter(and_(json_data['table_id'] == Booking.table_id,
                                                         and_((
                                                             or_(Booking.date_time_from >= date_time_from,
                                                                 Booking.date_time_to >= date_time_from)),
                                                             or_(Booking.date_time_from <= date_time_to,
                                                                 Booking.date_time_to <= date_time_to))
-                                                        )).all()
+                                                            )).all()
                     user = Users.query.filter(Users.email == json_data['email']).first()
                     table_id = Tables.query.filter(Tables.table_id == json_data['table_id']).first()
                     if not forbidden:
