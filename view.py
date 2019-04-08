@@ -626,8 +626,7 @@ def index():
                     db.session.commit()
         # MAIN PART
         # Select not-accepted booking records from DB
-        db.session.commit()
-        booking = Booking.query.filter(not_(Booking.accepted is True)).all()
+        booking = Booking.query.filter(not_(Booking.accepted == True)).all()
 
         flights_keys = {}
         flights = []
