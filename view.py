@@ -721,6 +721,7 @@ def view_booking():
                     del_book_keys['time_to'] = time_to
                     del_book_keys['table_id'] = del_book.table_id
                     del_book_list.append(del_book_keys)
+                    del_book_keys = {}
 
         flights_keys = {}
         flights = []

@@ -21,7 +21,7 @@
 {% for del_book in del_book_list %}
     <div class="alert alert-danger" role="alert" style="height: 65px;">
         <table>
-            <tr>
+            <tr id= {{del_book.booking_id}}>
                 <td><strong>ОТМЕНА БРОНИРОВАНИЯ</strong>. Пользователь: <u>{{del_book.user_name}}</u>
                     Телефон: <u>{{del_book.user_phone}}</u>
                     Дата бронирования: <u>{{del_book.date_from}}</u>
