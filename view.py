@@ -565,7 +565,8 @@ def change_user_credentials():
 @app.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
-    try:
+    #try:
+        errorvar = 0
         # If something was POSTed
         if request.method == 'POST':
             # If button "Accept" was pressed
@@ -579,43 +580,77 @@ def index():
                     if order_table:
                         # If record was not accepted yet
                         if not order_table.accepted:
-                            # Change status to "Accepted" and deploy changes to DB
-                            order_table.accepted = True
-                            db.session.add(order_table)
-                            db.session.commit()
-                            # Select email of user, created booking
-                            user = Users.query.filter(Users.id == order_table.user_id).first()
-                            # Create service headers
-                            if user:
-                                mail_to = user.email
-                                subject = "Ресторан 'На Рогах'"
-                                # Select user's name
-                                user_name = user.name
-                                if not user_name:
-                                    # If there's no name, create generalized greeting
-                                    name = str("мы рады, что Вы пользуетесь нашим приложением")
+                            bbkdt = datetime.strftime(order_table.date_time_from, "%Y-%m-%d %H:%M")
+                            booking_week_day = datetime.strptime(bbkdt, "%Y-%m-%d %H:%M").weekday()
+                            timetable = None
+                            if booking_week_day == 0:
+                                timetable = Timetable.query.filter(Timetable.week_day == "пн").first()
+                            elif booking_week_day == 1:
+                                timetable = Timetable.query.filter(Timetable.week_day == "вт").first()
+                            elif booking_week_day == 2:
+                                timetable = Timetable.query.filter(Timetable.week_day == "ср").first()
+                            elif booking_week_day == 3:
+                                timetable = Timetable.query.filter(Timetable.week_day == "чт").first()
+                            elif booking_week_day == 4:
+                                timetable = Timetable.query.filter(Timetable.week_day == "пт").first()
+                            elif booking_week_day == 5:
+                                timetable = Timetable.query.filter(Timetable.week_day == "сб").first()
+                            elif booking_week_day == 6:
+                                timetable = Timetable.query.filter(Timetable.week_day == "вс").first()
+                            if timetable:
+                                sskdt = datetime.strftime(order_table.date_time_from, "%Y-%m-%d %H:%M")
+                                str_date_time_from = datetime.strptime(sskdt, "%Y-%m-%d %H:%M").time()
+                                strdatetime = datetime.strftime(order_table.date_time_to, "%Y-%m-%d %H:%M")
+                                str_date_time_to = datetime.strptime(strdatetime, "%Y-%m-%d %H:%M").time()
+                                is_tommorrow = False
+                                if datetime.strptime("0", '%H').time() < timetable.time_to < datetime.strptime("12",
+                                                                                                               '%H').time():
+                                    is_tommorrow = True
                                 else:
-                                    # Else, convert name to string
-                                    name = str(user_name)
-                                # Select data, identifier, table's number, time_from and time_to
-                                ident = str(order_table.booking_id)
-                                num = str(order_table.table_id)
-                                b_date = str(order_table.date_time_from.strftime('%d.%m.%Y'))
-                                b_time_from = str(order_table.date_time_from.strftime('%H:%M'))
-                                b_time_to = str(order_table.date_time_to.strftime('%H:%M'))
-                                # Insert data to message body in HTML
-                                body = """
-                                <h1><b>Здравствуйте, """+name+"""!</b></h1>
-                                <p>Вы успешно забронировали стол <b>№ """ +\
-                                       num+"""</b> на <b>""" +\
-                                       b_date+"""</b> с <b>""" +\
-                                       b_time_from+"""</b> до <b>""" +\
-                                       b_time_to+"""</b>. Номер Вашего заказа - <b>"""\
-                                       + ident + """</b></p>
-                                <p>Мы с радостью ждем Вас в гости!</p>
-                                """
-                                # Send email
-                                send_mail(mail_to, subject, body)
+                                    if str_date_time_from < timetable.time_to and str_date_time_to < timetable.time_to:
+                                        is_tommorrow = True
+                                if str_date_time_from >= timetable.time_from and is_tommorrow:
+                                    # Change status to "Accepted" and deploy changes to DB
+                                    order_table.accepted = True
+                                    db.session.add(order_table)
+                                    db.session.commit()
+                                    # Select email of user, created booking
+                                    user = Users.query.filter(Users.id == order_table.user_id).first()
+                                    # Create service headers
+                                    if user:
+                                        mail_to = user.email
+                                        subject = "Ресторан 'На Рогах'"
+                                        # Select user's name
+                                        user_name = user.name
+                                        if not user_name:
+                                            # If there's no name, create generalized greeting
+                                            name = str("мы рады, что Вы пользуетесь нашим приложением")
+                                        else:
+                                            # Else, convert name to string
+                                            name = str(user_name)
+                                        # Select data, identifier, table's number, time_from and time_to
+                                        ident = str(order_table.booking_id)
+                                        num = str(order_table.table_id)
+                                        b_date = str(order_table.date_time_from.strftime('%d.%m.%Y'))
+                                        b_time_from = str(order_table.date_time_from.strftime('%H:%M'))
+                                        b_time_to = str(order_table.date_time_to.strftime('%H:%M'))
+                                        # Insert data to message body in HTML
+                                        body = """
+                                        <h1><b>Здравствуйте, """+name+"""!</b></h1>
+                                        <p>Вы успешно забронировали стол <b>№ """ +\
+                                               num+"""</b> на <b>""" +\
+                                               b_date+"""</b> с <b>""" +\
+                                               b_time_from+"""</b> до <b>""" +\
+                                               b_time_to+"""</b>. Номер Вашего заказа - <b>"""\
+                                               + ident + """</b></p>
+                                        <p>Мы с радостью ждем Вас в гости!</p>
+                                        """
+                                        # Send email
+                                        send_mail(mail_to, subject, body)
+                                else:
+                                    errorvar = 10
+                            else:
+                                errorvar = 10
             # If was pressed 'delete' button
             if request.form['index'] == "1":
                 # Select id of record, where button was pressed
@@ -653,11 +688,11 @@ def index():
             flights.append(flights_keys)
             flights_keys = {}
         # Create view page with data
-        return render_template('index.html', flights=flights)
-    except KeyError:
-        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+        return render_template('index.html', flights=flights, errorvar=errorvar)
+    #except KeyError:
+        #return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    #except Exception:
+        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route("/view_booking", methods=['GET', 'POST'])
@@ -763,7 +798,7 @@ def view_booking():
 @app.route("/reg_booking", methods=['GET', 'POST'])
 @login_required
 def reg_booking():
-    try:
+    #try:
         # variable to store errors, if they are and 0, if there're no errors
         ans = 3
         # If something was POSTed
@@ -804,11 +839,14 @@ def reg_booking():
                     if timetable:
                         str_date_time_from = datetime.strptime(date_time_from, "%Y-%m-%d %H:%M").time()
                         str_date_time_to = datetime.strptime(date_time_to, "%Y-%m-%d %H:%M").time()
-                        print("Время начала из формы: ", str_date_time_from)
-                        print("Время окончания из формы: ", str_date_time_to)
-                        print("Время начала из расписания: ", timetable.time_from)
-                        print("Время окончания из расписания: ", timetable.time_to)
-                        if str_date_time_from >= timetable.time_from:
+                        is_tommorrow = False
+                        if datetime.strptime("0", '%H').time() < timetable.time_to < datetime.strptime("12",
+                                                                                                       '%H').time():
+                            is_tommorrow = True
+                        else:
+                            if str_date_time_from < timetable.time_to and str_date_time_to < timetable.time_to:
+                                is_tommorrow = True
+                        if str_date_time_from >= timetable.time_from and is_tommorrow:
                             forbidden = Booking.query.filter(and_(table == Booking.table_id,
                                                                   and_((
                                                                       or_(Booking.date_time_from >= date_time_from,
@@ -848,10 +886,10 @@ def reg_booking():
                 ans = 6
 
         return render_template('reg_booking.html', ans=ans)
-    except KeyError:
-        return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
-    except Exception:
-        return jsonify({'code': 500, 'desc': "Internal server error"}), 500
+    #except KeyError:
+        #return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
+    #except Exception:
+        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route("/reg_new_admin", methods=['GET', 'POST'])

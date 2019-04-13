@@ -4,7 +4,11 @@
 
     {% block content %}
 <p></p>
-
+{% if errorvar == 10 %}
+<div class="alert alert-danger" role="alert">
+  Невозможно подтвердить бронирование. Ресторан не работает в указанное время. Предупредите клиента, и удалите данную бронь!
+</div>
+{% endif %}
 <ul class="nav nav-tabs">
   <li class="nav-item">
     <a class="nav-link active" href="">Подтверждение бронирования</a>

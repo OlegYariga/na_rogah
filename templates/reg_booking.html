@@ -27,6 +27,10 @@
 <div class="alert alert-danger" role="alert">
   Вы не можете забронировать столик больше чем на 4 часа!
 </div>
+{% elif ans == 10 %}
+<div class="alert alert-danger" role="alert">
+  Время больше 0 и меньше 12!
+</div>
 {% endif %}
 <p></p>
 <ul class="nav nav-tabs">
