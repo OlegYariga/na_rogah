@@ -798,7 +798,6 @@ def view_booking():
 @app.route("/reg_booking", methods=['GET', 'POST'])
 @login_required
 def reg_booking():
-    #try:
         # variable to store errors, if they are and 0, if there're no errors
         ans = 3
         # If something was POSTed
@@ -886,10 +885,6 @@ def reg_booking():
                 ans = 6
 
         return render_template('reg_booking.html', ans=ans)
-    #except KeyError:
-        #return jsonify({'code': 406, 'desc': "Not acceptable - Key or value error"}), 406
-    #except Exception:
-        #return jsonify({'code': 500, 'desc': "Internal server error"}), 500
 
 
 @app.route("/reg_new_admin", methods=['GET', 'POST'])
